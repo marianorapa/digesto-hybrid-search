@@ -3,21 +3,15 @@ import os
 from sentence_transformers import SentenceTransformer
 
 model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
-number_of_docs = len(os.listdir('input'))
-
-def get_progress():
-    with open('../embeddings-progress.txt', 'r') as file:
-        # Read the single value from the file
-        return int(file.readline().strip())
 
 def create_embeddings(sections):
     return model.encode(sections)
 
-# start_line = get_progress()
-# print(start_line)
-# print(number_of_docs)
+file_path = '../raw-digest/RES_PHCS_NÂº_259_03.pdf.txt'
 
-embeddings = create_embeddings(sentences)
-print(embeddings)
+with open(file_path, 'r') as f:
+    text = f.read()
+    embeddings = create_embeddings(text)
 
-
+with open(file_path + '-embeddings.txt', 'w') as f:
+    f.write(str(embeddings))

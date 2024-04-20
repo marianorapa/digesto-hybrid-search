@@ -1,4 +1,6 @@
 PyMuPDF==1.24.0
 sentence-transformers==2.6.1
 tqdm==4.66.2
-
+langchain==0.1.16
+nltk==3.8.1
+spacy==3.7.4
