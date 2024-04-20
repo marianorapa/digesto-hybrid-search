@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 # Define the k
 keywords = ["VISTO:", "CONSIDERANDO:"]
-last_key = [""]
+last_key = ["ARTÍCULO  1°", "ARTICULO  1º"]
 
 file = open('new-failures.txt', 'w')
 file.close()
