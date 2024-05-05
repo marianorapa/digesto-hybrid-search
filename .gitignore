@@ -1,8 +1,8 @@
 /input/
 /venv/
-/downloader/input/
-/downloader/app.log
-/downloader/*.txt
+
+app.log
+*.txt
 
 .idea/
 
