@@ -38,7 +38,7 @@ except:
     print("No progress, using 0 as default")
 
 try:
-    for file in tqdm(os.listdir("../raw-digest")):
+    for file in tqdm(os.listdir("../../raw-digest")):
         last_processed_file += 1
         with open("../raw-digest/" + file) as f:
             text = f.read()

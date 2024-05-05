@@ -21,5 +21,5 @@ def main(directory):
     print("Total files: " + str(total))
     print("More than 400 words: " + str(count))
 # Replace 'directory_path' with the path to your directory
-directory_path = '../raw-digest'
+directory_path = '../../raw-digest'
 main(directory_path)
