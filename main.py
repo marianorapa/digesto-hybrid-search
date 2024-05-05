@@ -1,6 +1,6 @@
 from simple_term_menu import TerminalMenu
 
-from preprocessors.digest_downloader_converter import download_and_convert
+from preprocessors.digest_downloader_converter.downloader_converter import download_and_convert
 
 DOWNLOAD_DOCS = 0
 INDEX_DOCS = 1
@@ -10,7 +10,7 @@ EXIT = 3
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(1, 20)
+        download_and_convert(1, 10)
     elif menu_entry_index == INDEX_DOCS:
         print("Index")
     elif menu_entry_index == RETRIEVE_DOCS:
