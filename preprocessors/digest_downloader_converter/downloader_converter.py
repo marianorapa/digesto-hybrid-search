@@ -7,9 +7,7 @@ import urllib
 
 logging.basicConfig(level=logging.DEBUG, filename="app.log",filemode="w")
 
-directory = "input"
-if not os.path.exists(directory):
-    os.makedirs(directory)
+directory = "collection/"
 
 
 def ensure_unique_filepath(cleaned_file_name):
@@ -64,19 +62,16 @@ def download_documents(id_from: int, id_to: int):
     return id_to + 1
 
 
-try:
-    with open('downloads-progress.txt', 'r') as file:
-        # Read the single value from the file
-        value = file.readline().strip()
-except Exception as e:
-    value = "0"
+def download_and_convert(doc_id_from, doc_id_to):
 
+    try:
+        with open('downloads-progress.txt', 'r') as file:
+            # Read the single value from the file
+            value = file.readline().strip()
+    except FileNotFoundError as e:
+        value = "0"
 
-for i in range(int(value), 135):
-    logging.info(f"Processing batch num {i}")
-    min = i * 1000
-    max = min + 1000
-    download_documents(min, max)
+    last_id = download_documents(doc_id_from, doc_id_to)
 
     with open('downloads-progress.txt', 'w', encoding="utf-8") as file:
-        file.write(str(i + 1))
+        file.write(str(last_id))
