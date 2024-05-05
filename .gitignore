@@ -1,0 +1,10 @@
+/input/
+/venv/
+/downloader/input/
+/downloader/app.log
+/downloader/*.txt
+
+.idea/
+
+
+
