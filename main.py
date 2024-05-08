@@ -10,7 +10,7 @@ EXIT = 3
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(1, 10)
+        download_and_convert(0, 131300)
     elif menu_entry_index == INDEX_DOCS:
         print("Index")
     elif menu_entry_index == RETRIEVE_DOCS:
