@@ -70,7 +70,7 @@ def process_not_found_document(filename, url):
         file.write(f"{filename},{url}\n")
 
 def not_found_document(content):
-    return "El documento que ha solicitado no existe." in str(content)
+    return "El documento que ha solicitado no existe." in str(content) or "No tiene permisos suficientes para ver este documento." in str(content)
 
 def process_valid_document(file_name, response, url):
     cleaned_file_name = urllib.parse.quote_plus(file_name)
