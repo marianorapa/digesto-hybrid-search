@@ -75,13 +75,18 @@ def not_found_document(content):
 def process_valid_document(file_name, response, url):
     cleaned_file_name = urllib.parse.quote_plus(file_name)
 
-    with open(f'{BASE_DIR}/downloads-meta.txt', 'a', encoding="utf-8") as file:
-        file.write(f"{cleaned_file_name},{file_name},{url}\n")
+    parsed_text = parse_pdf_content(response.content)
 
     save_complete_pdf(cleaned_file_name, response)
 
-    parsed_text = parse_pdf_content(response.content)
-    save_parsed_text(cleaned_file_name, parsed_text)
+    if len(parsed_text) > 1:
+        with open(f'{BASE_DIR}/downloads-meta.txt', 'a', encoding="utf-8") as file:
+            file.write(f"{cleaned_file_name},{file_name},{url}\n")
+
+        save_parsed_text(cleaned_file_name, parsed_text)
+    else:
+        with open(f'{BASE_DIR}/downloads-empty.txt', 'a', encoding="utf-8") as file:
+            file.write(f"{file_name},{url}\n")
 
 def process_document_from_url(url, index):
     # Make an HTTP GET request to download the PDF file
