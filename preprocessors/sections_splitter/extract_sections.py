@@ -3,15 +3,32 @@ import os
 
 from tqdm import tqdm
 
-DISPONE_DIR = "collection/completa/dispone/"
-RESUELVE_DIR = "collection/completa/resuelve/"
+DISPONE_BASE_DIR = "collection/completa/dispone/"
+RESUELVE_BASE_DIR = "collection/completa/resuelve/"
 
-BASE_OUTPUT_DIR = "collection/"
+BASE_OUTPUT_DIR = "collection"
+
+VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
+CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
+RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve"
+DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone"
 
 # Define the k
 keywords = ["VISTO:", "CONSIDERANDO:"]
 last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
 
+def create_directories():
+    if not os.path.exists(VISTO_DIR):
+        os.mkdir(VISTO_DIR)
+
+    if not os.path.exists(CONSIDERANDO_DIR):
+        os.mkdir(CONSIDERANDO_DIR)
+
+    if not os.path.exists(RESUELVE_DIR):
+        os.mkdir(RESUELVE_DIR)
+
+    if not os.path.exists(DISPONE_DIR):
+        os.mkdir(DISPONE_DIR)
 
 def extract_sections(text, file_name) -> list[str]:
     # Split the text using regular expressions
@@ -45,18 +62,18 @@ def extract_sections_and_write_to_file(base_dir, last_section_dir):
                 text = f.read()
                 sections = extract_sections(text, file)
                 if len(sections) == 3:
-                    with open(f"{BASE_OUTPUT_DIR}/visto/{file}", "w") as output:
+                    with open(f"{VISTO_DIR}/{file}", "w") as output:
                         output.write(sections[0])
-                    with open(f"{BASE_OUTPUT_DIR}/considerando/{file}", "w") as output:
+                    with open(f"{CONSIDERANDO_DIR}/{file}", "w") as output:
                         output.write(sections[1])
                     with open(f"{BASE_OUTPUT_DIR}/{last_section_dir}/{file}", "w") as output:
                         output.write(sections[2])
                 else:
                     failures.append(file)
 
-
-failures_resuelve = extract_sections_and_write_to_file(RESUELVE_DIR, "resuelve")
-failures_dispone = extract_sections_and_write_to_file(DISPONE_DIR, "dispone")
+create_directories()
+failures_resuelve = extract_sections_and_write_to_file(RESUELVE_BASE_DIR, "resuelve")
+failures_dispone = extract_sections_and_write_to_file(DISPONE_BASE_DIR, "dispone")
 
 if failures_dispone is not None and failures_resuelve is not None:
     with open('preprocessors/sections_splitter/failures.txt', 'w') as file:
