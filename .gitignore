@@ -3,8 +3,10 @@
 
 app.log
 *.txt
-
+*.pdf
 .idea/
+
+
 
 
 
