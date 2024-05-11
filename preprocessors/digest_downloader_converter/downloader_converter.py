@@ -48,7 +48,7 @@ def parse_pdf_content(pdf_content):
     text = ""
     for page in doc:  # iterate the document pages
         text += page.get_text()
-        return remove_exp_fragment(text)
+    return remove_exp_fragment(text)
 
 def save_parsed_text(cleaned_file_name, parsed_text):
     filepath = ""
