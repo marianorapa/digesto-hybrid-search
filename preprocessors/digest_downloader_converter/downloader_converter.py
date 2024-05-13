@@ -15,8 +15,6 @@ DISPOSITION_DIR = BASE_COLLECTION_DIR + COMPLETE_COLLECTION_DIR + "/dispone"
 BASE_DIR = "./preprocessors/digest_downloader_converter"
 RAW_OUTPUT_DIR = f"{BASE_DIR}/raw/"
 
-logging.basicConfig(level=logging.DEBUG, filename=f"{BASE_DIR}/app.log", filemode="w")
-
 def create_directories():
     if not os.path.exists(RAW_OUTPUT_DIR):
         os.mkdir(RAW_OUTPUT_DIR)
@@ -135,6 +133,7 @@ def download_documents(id_from: int, id_to: int):
 
 
 def download_and_convert(doc_id_from, doc_id_to):
+    logging.info("Downloader Converter Started")
 
     progress_file = f'{BASE_DIR}/downloads-progress.txt'
     try:

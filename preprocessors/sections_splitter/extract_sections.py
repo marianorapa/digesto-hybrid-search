@@ -1,12 +1,12 @@
 import re
 import os
-
+import logging
 from tqdm import tqdm
 
-DISPONE_BASE_DIR = "collection/completa/dispone/"
-RESUELVE_BASE_DIR = "collection/completa/resuelve/"
+BASE_OUTPUT_DIR = "./collection"
 
-BASE_OUTPUT_DIR = "collection"
+DISPONE_BASE_DIR = f"{BASE_OUTPUT_DIR}/completa/dispone/"
+RESUELVE_BASE_DIR = f"{BASE_OUTPUT_DIR}/completa/resuelve/"
 
 VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
 CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
@@ -30,7 +30,7 @@ def create_directories():
     if not os.path.exists(DISPONE_DIR):
         os.mkdir(DISPONE_DIR)
 
-def extract_sections(text, file_name) -> list[str]:
+def extract_sections_from_text_and_save_to_file(text, file_name) -> list[str]:
     # Split the text using regular expressions
     last = None
 
@@ -40,8 +40,8 @@ def extract_sections(text, file_name) -> list[str]:
             break
 
     if last is None:
-        print(f"Error in extracting sections from file: {file_name}")
-        with open('failures.txt', 'a') as file:
+        logging.error(f"Error in extracting sections from file: {file_name}")
+        with open(f'{BASE_DIR}/failures.txt', 'a') as file:
             file.write(file_name + '\n')
         return []
 
@@ -60,7 +60,7 @@ def extract_sections_and_write_to_file(base_dir, last_section_dir):
         if file.endswith(".txt"):
             with open(base_dir + "/" + file) as f:
                 text = f.read()
-                sections = extract_sections(text, file)
+                sections = extract_sections_from_text_and_save_to_file(text, file)
                 if len(sections) == 3:
                     with open(f"{VISTO_DIR}/{file}", "w") as output:
                         output.write(sections[0])
@@ -71,11 +71,14 @@ def extract_sections_and_write_to_file(base_dir, last_section_dir):
                 else:
                     failures.append(file)
 
-create_directories()
-failures_resuelve = extract_sections_and_write_to_file(RESUELVE_BASE_DIR, "resuelve")
-failures_dispone = extract_sections_and_write_to_file(DISPONE_BASE_DIR, "dispone")
+def extract_sections():
+    logging.info("Sections Splitter Started")
 
-if failures_dispone is not None and failures_resuelve is not None:
-    with open('preprocessors/sections_splitter/failures.txt', 'w') as file:
-        file.writelines(str(failures_resuelve))
-        file.writelines(str(failures_dispone))
+    create_directories()
+    failures_resuelve = extract_sections_and_write_to_file(RESUELVE_BASE_DIR, "resuelve")
+    failures_dispone = extract_sections_and_write_to_file(DISPONE_BASE_DIR, "dispone")
+
+    if failures_dispone is not None and failures_resuelve is not None:
+        with open('preprocessors/sections_splitter/failures.txt', 'w') as file:
+            file.writelines(str(failures_resuelve))
+            file.writelines(str(failures_dispone))
