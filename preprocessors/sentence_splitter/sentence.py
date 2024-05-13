@@ -1,17 +1,47 @@
-from transformers import GPT2TokenizerFast
+import os
+from sentence_transformers import SentenceTransformer
+import nltk
+import re
+from tqdm import tqdm
+import csv
 
-tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
 
-# This is a long document we can split up.
-with open("./input/1.txt") as f:
-    doc_1 = f.read()
-from langchain_text_splitters import CharacterTextSplitter
+BASE_OUTPUT_DIR = "collection"
 
-text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
-    tokenizer, chunk_size=100, chunk_overlap=0
-)
+VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
+CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
+RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve"
+DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone"
 
-texts = text_splitter.split_text(doc_1)
+def split_sentences(text):
+    text = re.sub(r'\s+', ' ', text)
+    text = text.replace('º.-', ':').replace('.-', '.')
+    return es_tokenizer.tokenize(text)
 
-for x, text in enumerate(texts):
-    print(f"{x}-{text}")
+
+def save_file(filename, sentences):
+    file = filename.replace('.txt', '.csv')
+    with open(file, 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(sentences)
+
+
+def split_sentences_from_dir(dir):
+    if not os.path.exists(dir + '/sentences'):
+        os.mkdir(dir + '/sentences')
+    for file in tqdm(os.listdir(dir)):
+        if file.endswith('.txt'):
+            with open(dir + '/' + file, 'r') as f:
+                text = f.read()
+                sentences = split_sentences(text)
+                save_file(dir + '/sentences/' + file, sentences)
+
+
+nltk.download('punkt')
+es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
+model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
+
+split_sentences_from_dir(VISTO_DIR)
+split_sentences_from_dir(CONSIDERANDO_DIR)
+split_sentences_from_dir(DISPONE_DIR)
+split_sentences_from_dir(RESUELVE_DIR)
