@@ -1,0 +1,12 @@
+/input/
+/venv/
+
+app.log
+*.txt
+*.pdf
+.idea/
+
+
+
+
+
