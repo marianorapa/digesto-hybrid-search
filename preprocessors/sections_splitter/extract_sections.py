@@ -13,6 +13,8 @@ CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
 RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve"
 DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone"
 
+BASE_DIR = "./preprocessors/sections_splitter"
+
 # Define the k
 keywords = ["VISTO:", "CONSIDERANDO:"]
 last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
@@ -56,7 +58,9 @@ def extract_sections_from_text_and_save_to_file(text, file_name) -> list[str]:
 
 def extract_sections_and_write_to_file(base_dir, last_section_dir):
     failures = []
-    for file in tqdm(os.listdir(base_dir)):
+    for file in os.listdir(base_dir):
+        if file != "RES_REC_N%C3%82%C2%BA_398%2F23.txt":
+            continue
         if file.endswith(".txt"):
             with open(base_dir + "/" + file) as f:
                 text = f.read()

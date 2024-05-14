@@ -30,7 +30,7 @@ def save_file(filename, sentences):
 def split_sentences_from_dir(es_tokenizer, dir):
     if not os.path.exists(dir + '/sentences'):
         os.mkdir(dir + '/sentences')
-    for file in tqdm(os.listdir(dir)):
+    for file in os.listdir(dir):
         if file.endswith('.txt'):
             with open(dir + '/' + file, 'r') as f:
                 text = f.read()
