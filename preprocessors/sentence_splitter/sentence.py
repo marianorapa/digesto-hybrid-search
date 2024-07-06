@@ -35,6 +35,13 @@ def split_sentences_from_dir(es_tokenizer, dir):
             with open(dir + '/' + file, 'r') as f:
                 text = f.read()
                 sentences = split_sentences_from_text(es_tokenizer, text)
+
+                if sentences <= 0:
+                    logging.error("File without sentences {dir}/{file}")  
+                    # Aca habría que evitar construir los embeddings de las demás secciones
+                    # Eliminar los archivos de sentencias de las demás secciones, y el archivo de la colección
+                    # Agregarlo a una lista de Failures
+                    
                 save_file(dir + '/sentences/' + file, sentences)
 
 def split_sentences():

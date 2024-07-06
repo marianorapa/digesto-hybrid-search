@@ -16,8 +16,9 @@ EXIT = 3
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
         #download_and_convert(0, 131500)
-        extract_sections()
+        #extract_sections()
         #split_sentences()
+        print("index")
     elif menu_entry_index == INDEX_DOCS:
         generate_embeddings()
     elif menu_entry_index == RETRIEVE_DOCS:
