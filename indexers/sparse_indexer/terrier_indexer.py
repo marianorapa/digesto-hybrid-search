@@ -2,10 +2,6 @@ import pyterrier as pt
 import os
 import nltk
 
-#inputpath = "/home/agustin/digesto-hybrid-search/collection/visto"
-#outputpath = "/home/agustin/digesto-hybrid-search/indexes/sparse_indexer/"
-
-
 BASE_INPUT_DIR = "./collection"
 
 VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/documents"
@@ -95,8 +91,3 @@ def terrier_index():
     index_directory(COMPLETE_COMPLETE_INPUT_DIR, COMPLETE_COMPLETE_OUTPUT_DIR, stopwords)
     index_directory(COMPLETE_RESUELVE_INPUT_DIR, COMPLETE_RESUELVE_OUTPUT_DIR, stopwords)
     index_directory(COMPLETE_DISPONE_INPUT_DIR, COMPLETE_DISPONE_OUTPUT_DIR, stopwords)
-
-
-
-
-terrier_index()
