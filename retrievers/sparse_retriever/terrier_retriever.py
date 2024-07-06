@@ -51,16 +51,6 @@ def get_relevant_documents(index, query, k):
 
         doc_ids = list(query_results.docid)
 
-        print(final_results)
         return final_results
 
 get_relevant_documents("VISTO", "Gabriel Tolosa", 10)
-        #
-
-#print(meta.getAllItems(20196))
-
-#doi = index.getDocumentIndex()
-
-#print(doi.getDocumentEntry(20196).toString())
-
-#print(result)
