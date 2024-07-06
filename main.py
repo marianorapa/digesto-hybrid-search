@@ -18,15 +18,64 @@ def process_option(menu_entry_index):
         #download_and_convert(0, 131500)
         #extract_sections()
         #split_sentences()
-        print("index")
+        print("download")
     elif menu_entry_index == INDEX_DOCS:
-        generate_embeddings()
+        print("Index")
+        # generate_embeddings()
     elif menu_entry_index == RETRIEVE_DOCS:
-        print("Retrieve")
+        retrieve_suboptions()
 
+
+def retrieve_suboptions():
+    type_options = ["Sparse", "Hybrid", "Volver"]
+    index_type_menu = TerminalMenu(type_options)
+    collection_options = {
+        "Completo": "COMPLETE_COMPLETE",
+        "Resoluciones": "COMPLETE_RESUELVE",
+        "Disposiciones": "COMPLETE_DISPONE",
+        "Visto": "VISTO",
+        "Considerando": "CONSIDERANDO",
+        "Resuelve": "RESUELVE",
+        "Dispone": "DISPONE",
+        "Volver": ""
+    }
+
+    sections_menu = TerminalMenu(collection_options.keys())
+
+    back_to_main_menu = False
+    while not back_to_main_menu:
+        index_sel = index_type_menu.show()
+        if (index_sel == 0):
+            # retriever = SparseRetriever()
+            retriever = "SparseRetriever"
+        elif (index_sel == 1):
+            # retriever = HybridRetriever()
+            retriever = "HybridRetriever"
+        elif (index_sel == 2):
+            back_to_main_menu = True
+
+        section_options_back = False
+        while not section_options_back and not back_to_main_menu:
+            sections_sel = sections_menu.show()
+            if (sections_sel == 7):
+                section_options_back = True
+            else:
+                selected_key = list(collection_options.keys())[sections_sel]
+                do_retrieve(retriever, collection_options[selected_key])
+                section_options_back = True
+                back_to_main_menu = True
+
+def do_retrieve(retriever, collection):
+    print(retriever)
+    print(collection)
+    query = input("Query: ")
+    k = input("k documentos a recuperar: ")
+    # docs = retriever.retrieve(collection_options[sections_sel], query, k)
+    print("Resultados: ")
+    input("Enter para continuar")
 
 def menu():
-    options = ["Download docs & Preprocess", "Index (sparse & dense)", "Retrieve", "Exit"]
+    options = ["Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Recuperar", "Salir"]
     terminal_menu = TerminalMenu(options)
     menu_entry_index = -1
     while menu_entry_index != EXIT:
