@@ -4,6 +4,8 @@ from preprocessors.sections_splitter.extract_sections import extract_sections
 from preprocessors.sentence_splitter.sentence import split_sentences
 from indexers.dense_indexer.embeddings_generator import generate_embeddings
 from indexers.sparse_indexer.terrier_indexer import terrier_index
+from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents_sparse
+from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
 import logging
 
 logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
@@ -23,7 +25,8 @@ def process_option(menu_entry_index):
         generate_embeddings()
         terrier_index()
     elif menu_entry_index == RETRIEVE_DOCS:
-        print("Retrieve")
+        print(get_relevant_documents_hybrid("VISTO", "Gabriel Tolosa", 10))
+
 
 
 def menu():

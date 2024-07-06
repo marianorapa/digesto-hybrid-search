@@ -23,7 +23,7 @@ INDEXES = {
 }
 
 
-def get_relevant_documents(index, query, k):
+def get_relevant_documents_sparse(index, query, k):
         if not pt.started():
                 pt.init()
 
@@ -41,8 +41,9 @@ def get_relevant_documents(index, query, k):
         for index, row in query_results.iterrows():
                 doc_id = row['docid']
                 score = row['score']
+                rank = row['rank'] + 1
                 filename = meta.getAllItems(doc_id)[1]
-                final_results.append([doc_id, score, filename])
+                final_results.append([doc_id, score, filename, rank])
 
                 counter += 1
                 if counter == k:
@@ -52,5 +53,3 @@ def get_relevant_documents(index, query, k):
         doc_ids = list(query_results.docid)
 
         return final_results
-
-get_relevant_documents("VISTO", "Gabriel Tolosa", 10)
