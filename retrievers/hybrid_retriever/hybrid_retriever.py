@@ -3,6 +3,7 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 from numpy import dot
 from numpy.linalg import norm
+import logging
 
 BASE_OUTPUT_DIR = "./indexes"
 DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index"
@@ -78,9 +79,13 @@ def get_relevant_documents_hybrid(index, query, k):
             else:
                 logging.error("Not DIS or RES in filename")
 
-        document_embedding = np.loadtxt(f"{dense_path}/{filename}")
+        try:
+            document_embedding = np.loadtxt(f"{dense_path}/{filename}")
 
-        cosine_similarity = cosine_similarity_of_vectors(query_vector, document_embedding)
+            cosine_similarity = cosine_similarity_of_vectors(query_vector, document_embedding)
+        except:
+            # If embedding is not available
+            cosine_similarity = -1
 
         relevant_document_sparse.append(cosine_similarity)
         relevant_documents_with_cosine_similarity.append(relevant_document_sparse)

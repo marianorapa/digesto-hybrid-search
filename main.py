@@ -49,10 +49,12 @@ def retrieve_suboptions():
         index_sel = index_type_menu.show()
         if (index_sel == 0):
             # retriever = SparseRetriever()
-            retriever = "SparseRetriever"
+            #retriever = "SparseRetriever"
+            retriever = get_relevant_documents_sparse
         elif (index_sel == 1):
             # retriever = HybridRetriever()
-            retriever = "HybridRetriever"
+            #retriever = "HybridRetriever"
+            retriever = get_relevant_documents_hybrid
         elif (index_sel == 2):
             back_to_main_menu = True
 
@@ -71,9 +73,11 @@ def do_retrieve(retriever, collection):
     print(retriever)
     print(collection)
     query = input("Query: ")
-    k = input("k documentos a recuperar: ")
-    # docs = retriever.retrieve(collection_options[sections_sel], query, k)
+    k = int(input("k documentos a recuperar: "))
+    docs = retriever(collection, query, k)
     print("Resultados: ")
+    for doc in docs:
+        print(doc)
     input("Enter para continuar")
 
 def menu():
