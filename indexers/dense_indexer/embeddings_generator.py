@@ -5,6 +5,7 @@ import csv
 from tqdm import tqdm
 import numpy as np
 import os.path
+from utils.file_eraser import erase_file_from_everywhere
 
 BASE_INPUT_DIR = "./collection"
 VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/sentences"
@@ -127,15 +128,21 @@ def mean_sections_embeddings(filename):
             logging.error(f"File not exist {COMPLETE_RESUELVE_OUTPUT_DIR}/{filename} or {COMPLETE_DISPONE_OUTPUT_DIR}/{filename}")
     else:
         logging.error(f"Couldnt find all embedings for file {filename}")
-        # TODO: Add it to failures
+        erase_file_from_everywhere(filename, "MISSING_EMBEDDINGS")
 
-    
 
 def generate_documents_embeddings():
+    deleted_files = []
+    with open("./deleted-files.txt", "r") as deleted:
+        for line in deleted.readlines():
+            filename = line.split(",")[0]
+            deleted_files.append(filename)
+
     with open("./preprocessors/digest_downloader_converter/downloads-meta.txt") as f:
         for line in f.readlines():
             filename = line.split(",")[0].replace("pdf", "txt")
-            mean_sections_embeddings(filename)
+            if (filename not in deleted_files):
+                mean_sections_embeddings(filename)
 
 def generate_embeddings():
     logging.info("Dense Indexer Started")
@@ -147,5 +154,3 @@ def generate_embeddings():
     generate_sections_embeddings(model)
 
     generate_documents_embeddings()
-
-

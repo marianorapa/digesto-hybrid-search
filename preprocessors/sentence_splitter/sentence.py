@@ -5,9 +5,12 @@ import re
 from tqdm import tqdm
 import csv
 import logging
-
+from utils.file_eraser import erase_file_from_everywhere
 
 BASE_OUTPUT_DIR = "./collection"
+
+COMPLETA_RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/completa/resuelve"
+COMPLETA_DISPONE_DIR = f"{BASE_OUTPUT_DIR}/completa/dispone"
 
 VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
 CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
@@ -36,11 +39,9 @@ def split_sentences_from_dir(es_tokenizer, dir):
                 text = f.read()
                 sentences = split_sentences_from_text(es_tokenizer, text)
 
-                if sentences <= 0:
+                if len(sentences) <= 0:
                     logging.error("File without sentences {dir}/{file}")  
-                    # Aca habría que evitar construir los embeddings de las demás secciones
-                    # Eliminar los archivos de sentencias de las demás secciones, y el archivo de la colección
-                    # Agregarlo a una lista de Failures
+                    erase_file_from_everywhere(file, "NO_SENTENCES")
                     
                 save_file(dir + '/sentences/' + file, sentences)
 

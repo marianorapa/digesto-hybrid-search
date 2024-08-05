@@ -18,7 +18,7 @@ EXIT = 3
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(0, 131500)
+        download_and_convert(0, 50000)
         extract_sections()
         split_sentences()
     elif menu_entry_index == INDEX_DOCS:

@@ -2,6 +2,7 @@ import re
 import os
 import logging
 from tqdm import tqdm
+from utils.file_eraser import erase_file_from_everywhere
 
 BASE_OUTPUT_DIR = "./collection"
 
@@ -45,6 +46,7 @@ def extract_sections_from_text_and_save_to_file(text, file_name) -> list[str]:
         logging.error(f"Error in extracting sections from file: {file_name}")
         with open(f'{BASE_DIR}/failures.txt', 'a') as file:
             file.write(file_name + '\n')
+        erase_file_from_everywhere(file_name, "MISSING_LAST_SECTION")
         return []
 
     all_keywords = keywords + [last]
@@ -59,8 +61,6 @@ def extract_sections_from_text_and_save_to_file(text, file_name) -> list[str]:
 def extract_sections_and_write_to_file(base_dir, last_section_dir):
     failures = []
     for file in os.listdir(base_dir):
-        if file != "RES_REC_N%C3%82%C2%BA_398%2F23.txt":
-            continue
         if file.endswith(".txt"):
             with open(base_dir + "/" + file) as f:
                 text = f.read()
