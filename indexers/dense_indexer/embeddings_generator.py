@@ -133,10 +133,13 @@ def mean_sections_embeddings(filename):
 
 def generate_documents_embeddings():
     deleted_files = []
-    with open("./deleted-files.txt", "r") as deleted:
-        for line in deleted.readlines():
-            filename = line.split(",")[0]
-            deleted_files.append(filename)
+    try: 
+        with open("./deleted-files.txt", "r") as deleted:
+            for line in deleted.readlines():
+                filename = line.split(",")[0]
+                deleted_files.append(filename)
+    except FileNotFoundError: 
+        logging.info("No deleted-files.txt file found")
 
     with open("./preprocessors/digest_downloader_converter/downloads-meta.txt") as f:
         for line in f.readlines():
