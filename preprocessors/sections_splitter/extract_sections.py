@@ -1,7 +1,7 @@
 import re
 import os
 import logging
-from tqdm import tqdm
+#from tqdm import tqdm
 from utils.file_eraser import erase_file_from_everywhere
 
 BASE_OUTPUT_DIR = "./collection"
@@ -9,10 +9,10 @@ BASE_OUTPUT_DIR = "./collection"
 DISPONE_BASE_DIR = f"{BASE_OUTPUT_DIR}/completa/dispone/"
 RESUELVE_BASE_DIR = f"{BASE_OUTPUT_DIR}/completa/resuelve/"
 
-VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
-CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
-RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve"
-DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone"
+VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto/documents"
+CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando/documents"
+RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve/documents"
+DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone/documents"
 
 BASE_DIR = "./preprocessors/sections_splitter"
 
@@ -22,16 +22,16 @@ last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
 
 def create_directories():
     if not os.path.exists(VISTO_DIR):
-        os.mkdir(VISTO_DIR)
+        os.makedirs(VISTO_DIR)
 
     if not os.path.exists(CONSIDERANDO_DIR):
-        os.mkdir(CONSIDERANDO_DIR)
+        os.makedirs(CONSIDERANDO_DIR)
 
     if not os.path.exists(RESUELVE_DIR):
-        os.mkdir(RESUELVE_DIR)
+        os.makedirs(RESUELVE_DIR)
 
     if not os.path.exists(DISPONE_DIR):
-        os.mkdir(DISPONE_DIR)
+        os.makedirs(DISPONE_DIR)
 
 def extract_sections_from_text_and_save_to_file(text, file_name) -> list[str]:
     # Split the text using regular expressions
