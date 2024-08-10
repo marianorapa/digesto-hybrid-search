@@ -12,16 +12,23 @@ logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
 
 DOWNLOAD_DOCS = 0
 INDEX_DOCS = 1
-RETRIEVE_DOCS = 2
-EXIT = 3
+DOWNLOAD_INDEX_DOCS = 2
+RETRIEVE_DOCS = 3
+EXIT = 4
 
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(0, 50000)
+        download_and_convert(0, 131500)
         extract_sections()
         split_sentences()
     elif menu_entry_index == INDEX_DOCS:
+        generate_embeddings()
+        terrier_index()
+    elif menu_entry_index == DOWNLOAD_INDEX_DOCS:
+        download_and_convert(0, 131500)
+        extract_sections()
+        split_sentences()
         generate_embeddings()
         terrier_index()
     elif menu_entry_index == RETRIEVE_DOCS:
@@ -81,7 +88,7 @@ def do_retrieve(retriever, collection):
     input("Enter para continuar")
 
 def menu():
-    options = ["Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Recuperar", "Salir"]
+    options = ["Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Descargar, preprocesar e indexar", "Recuperar", "Salir"]
     terminal_menu = TerminalMenu(options)
     menu_entry_index = -1
     while menu_entry_index != EXIT:
