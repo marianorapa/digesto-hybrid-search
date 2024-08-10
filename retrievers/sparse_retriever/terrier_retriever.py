@@ -30,9 +30,10 @@ def get_relevant_documents_sparse(index, query, k):
         output_dir = INDEXES[index]
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")
-        bm25 = pt.BatchRetrieve(index, wmodel="BM25")
 
-        query_results = bm25.search(query)
+        pipe = pt.rewrite.tokenise("utf") >> pt.BatchRetrieve(index, wmodel="BM25")
+
+        query_results = pipe.search(query)
 
         meta = index.getMetaIndex()
 
