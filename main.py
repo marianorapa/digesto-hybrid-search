@@ -1,4 +1,5 @@
 from simple_term_menu import TerminalMenu
+from utils.execution_cleaner import clear_execution_dirs
 from preprocessors.digest_downloader_converter.downloader_converter import download_and_convert
 from preprocessors.sections_splitter.extract_sections import extract_sections
 from preprocessors.sentence_splitter.sentence import split_sentences
@@ -10,12 +11,13 @@ import logging
 
 logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
 
-DOWNLOAD_DOCS = 0
-INDEX_DOCS = 1
-DOWNLOAD_INDEX_DOCS = 2
-RETRIEVE_DOCS = 3
-EXIT = 4
 
+DOWNLOAD_DOCS = 0
+DOWNLOAD_INDEX_DOCS = 1
+INDEX_DOCS = 2
+RETRIEVE_DOCS = 3
+CLEAR = 4
+EXIT = 5
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
@@ -33,6 +35,8 @@ def process_option(menu_entry_index):
         terrier_index()
     elif menu_entry_index == RETRIEVE_DOCS:
         retrieve_suboptions()
+    elif menu_entry_index == CLEAR:
+        clear_execution_dirs()
 
 
 def retrieve_suboptions():
@@ -55,12 +59,8 @@ def retrieve_suboptions():
     while not back_to_main_menu:
         index_sel = index_type_menu.show()
         if (index_sel == 0):
-            # retriever = SparseRetriever()
-            #retriever = "SparseRetriever"
             retriever = get_relevant_documents_sparse
         elif (index_sel == 1):
-            # retriever = HybridRetriever()
-            #retriever = "HybridRetriever"
             retriever = get_relevant_documents_hybrid
         elif (index_sel == 2):
             back_to_main_menu = True
@@ -88,14 +88,20 @@ def do_retrieve(retriever, collection):
     input("Enter para continuar")
 
 def menu():
-    options = ["Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Descargar, preprocesar e indexar", "Recuperar", "Salir"]
+    options = ["Descargar, preprocesar e indexar", "Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Recuperar", "Limpiar Entorno", "Salir"]
     terminal_menu = TerminalMenu(options)
     menu_entry_index = -1
     while menu_entry_index != EXIT:
         menu_entry_index = terminal_menu.show()
         process_option(menu_entry_index)
 
-
 if __name__ == "__main__":
-    menu()
-
+    try:
+        menu()
+    except NotImplementedError:
+        clear_execution_dirs()
+        download_and_convert(0, 50)
+        extract_sections()
+        split_sentences()
+        generate_embeddings()
+        terrier_index()

@@ -1,4 +1,4 @@
-import fitz_old as fitz
+import fitz
 import re
 import requests
 from tqdm import tqdm

@@ -60,7 +60,7 @@ def create_directories():
 
 def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
 
-    print(stopwords)
+    #print(stopwords)
     
     indexer = pt.FilesIndexer(index_path = OUTPUT_DIR, 
                           overwrite = True, 
