@@ -1,10 +1,10 @@
-import fitz
 import re
 import requests
 from tqdm import tqdm
 import os
 import logging
 import urllib
+from pypdf import PdfReader
 
 
 BASE_COLLECTION_DIR = "./collection"
@@ -40,12 +40,11 @@ def remove_exp_fragment(text):
 
     return cleaned_text.strip()
 
-def parse_pdf_content(pdf_content):
-    # Use fitz to open the PDF from binary content
-    doc = fitz.open(stream=pdf_content, filetype="pdf")
+def parse_pdf_content(filepath):
+    reader = PdfReader(filepath)
     text = ""
-    for page in doc:  # iterate the document pages
-        text += page.get_text()
+    for page in reader.pages:  # iterate the document pages
+        text += page.extract_text()
     return remove_exp_fragment(text)
 
 def save_parsed_text(cleaned_file_name, parsed_text):
@@ -73,9 +72,11 @@ def not_found_document(content):
 def process_valid_document(file_name, response, url):
     cleaned_file_name = urllib.parse.quote_plus(file_name)
 
-    parsed_text = parse_pdf_content(response.content)
+    filepath = save_complete_pdf(cleaned_file_name, response)
 
-    save_complete_pdf(cleaned_file_name, response)
+
+    parsed_text = parse_pdf_content(filepath)
+
 
     if len(parsed_text) > 1:
         with open(f'{BASE_DIR}/downloads-meta.txt', 'a', encoding="utf-8") as file:
@@ -114,6 +115,8 @@ def save_complete_pdf(cleaned_file_name, response):
 
     with open(filepath, "wb") as file:
         file.write(response.content)
+
+    return filepath
 
 
 def download_documents(id_from: int, id_to: int):
