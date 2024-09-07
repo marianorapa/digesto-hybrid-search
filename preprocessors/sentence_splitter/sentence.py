@@ -33,9 +33,10 @@ def save_file(filename, sentences):
 def split_sentences_from_dir(es_tokenizer, dir):
     if not os.path.exists(dir + '/sentences'):
         os.mkdir(dir + '/sentences')
-    for file in os.listdir(dir):
+    documents_dir = dir + '/documents'
+    for file in os.listdir(documents_dir):
         if file.endswith('.txt'):
-            with open(dir + '/' + file, 'r') as f:
+            with open(documents_dir + '/' + file, 'r') as f:
                 text = f.read()
                 sentences = split_sentences_from_text(es_tokenizer, text)
 
@@ -47,7 +48,6 @@ def split_sentences_from_dir(es_tokenizer, dir):
 
 def split_sentences():
     logging.info("Sentence Splitter Started")
-
     nltk.download('punkt')
     es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
     #model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
