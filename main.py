@@ -21,14 +21,14 @@ EXIT = 5
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(0, 131500)
+        download_and_convert(0, 50)
         extract_sections()
         split_sentences()
     elif menu_entry_index == INDEX_DOCS:
         generate_embeddings()
         terrier_index()
     elif menu_entry_index == DOWNLOAD_INDEX_DOCS:
-        download_and_convert(0, 131500)
+        download_and_convert(0, 50)
         extract_sections()
         split_sentences()
         generate_embeddings()
@@ -96,12 +96,5 @@ def menu():
         process_option(menu_entry_index)
 
 if __name__ == "__main__":
-    try:
-        menu()
-    except NotImplementedError:
-        clear_execution_dirs()
-        download_and_convert(0, 50)
-        extract_sections()
-        split_sentences()
-        generate_embeddings()
-        terrier_index()
+    menu()
+
