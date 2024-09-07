@@ -70,7 +70,7 @@ def extract_sections_and_write_to_file(base_dir, last_section_dir):
                         output.write(sections[0])
                     with open(f"{CONSIDERANDO_DIR}/{file}", "w") as output:
                         output.write(sections[1])
-                    with open(f"{BASE_OUTPUT_DIR}/{last_section_dir}/{file}", "w") as output:
+                    with open(f"{BASE_OUTPUT_DIR}/{last_section_dir}/documents/{file}", "w") as output:
                         output.write(sections[2])
                 else:
                     failures.append(file)
