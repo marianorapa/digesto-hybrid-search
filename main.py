@@ -7,13 +7,17 @@ from indexers.dense_indexer.embeddings_generator import generate_embeddings
 from indexers.sparse_indexer.terrier_indexer import terrier_index
 from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents_sparse
 from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
+from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-DOWNLOAD_DOCS = 0
-DOWNLOAD_INDEX_DOCS = 1
+
+DOWNLOAD_INDEX_DOCS = 0
+DOWNLOAD_DOCS = 1
 INDEX_DOCS = 2
 RETRIEVE_DOCS = 3
 CLEAR = 4
@@ -21,14 +25,14 @@ EXIT = 5
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(0, 50)
+        download_and_convert(0, 1000)
         extract_sections()
         split_sentences()
     elif menu_entry_index == INDEX_DOCS:
         generate_embeddings()
         terrier_index()
     elif menu_entry_index == DOWNLOAD_INDEX_DOCS:
-        download_and_convert(0, 50)
+        download_and_convert(0, 1000)
         extract_sections()
         split_sentences()
         generate_embeddings()
@@ -40,7 +44,7 @@ def process_option(menu_entry_index):
 
 
 def retrieve_suboptions():
-    type_options = ["Sparse", "Hybrid", "Volver"]
+    type_options = ["Sparse", "Dense", "Hybrid", "Volver"]
     index_type_menu = TerminalMenu(type_options)
     collection_options = {
         "Completo": "COMPLETE_COMPLETE",
@@ -61,8 +65,10 @@ def retrieve_suboptions():
         if (index_sel == 0):
             retriever = get_relevant_documents_sparse
         elif (index_sel == 1):
-            retriever = get_relevant_documents_hybrid
+            retriever = get_relevant_documents_dense
         elif (index_sel == 2):
+            retriever = get_relevant_documents_hybrid
+        elif (index_sel == 3):
             back_to_main_menu = True
 
         section_options_back = False

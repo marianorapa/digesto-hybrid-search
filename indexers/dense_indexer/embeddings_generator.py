@@ -210,7 +210,7 @@ def persist_dense_indexes(dense_indexes):
         index = dense_indexes[key]["index"]
         faiss.write_index(index, f"{root_directory}/index_{key}.bin")
 
-        with open(f"{root_directory}/metadata_{key}.json", "w") as outfile: 
+        with open(f"{root_directory}/index_metadata.json", "w") as outfile: 
             json.dump(dense_indexes[key]["metadata"], outfile)
 
 
