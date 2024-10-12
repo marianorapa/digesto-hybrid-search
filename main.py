@@ -25,14 +25,16 @@ EXIT = 5
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
-        download_and_convert(0, 1000)
+        number_of_docs = input("Cantidad docs a descargar: ")
+        download_and_convert(0, int(number_of_docs))
         extract_sections()
         split_sentences()
     elif menu_entry_index == INDEX_DOCS:
         generate_embeddings()
         terrier_index()
     elif menu_entry_index == DOWNLOAD_INDEX_DOCS:
-        download_and_convert(0, 1000)
+        number_of_docs = input("Cantidad docs a descargar: ")
+        download_and_convert(0, int(number_of_docs))
         extract_sections()
         split_sentences()
         generate_embeddings()
