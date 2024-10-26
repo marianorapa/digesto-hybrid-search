@@ -3,6 +3,7 @@ import faiss
 import json
 import os
 import glob
+from utils.url_finder import get_url
 
 BASE_OUTPUT_DIR = "./indexes"
 DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index"
@@ -43,6 +44,9 @@ def retrieve_index(index_name):
 def get_filename_from_metadata(metadata, i):
     return metadata[str(i)];
 
+def get_url_from_filename(filename):
+    return get_url(filename)
+
 def get_relevant_documents_dense(index_name, query, k):
     # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
     # devuelve los docs
@@ -55,6 +59,7 @@ def get_relevant_documents_dense(index_name, query, k):
     results = []
     for distance, i in zip(D[0], I[0]):
         filename = get_filename_from_metadata(metadata, i)
-        results.append((i, filename, distance))
+        url = get_url_from_filename(filename)
+        results.append((i, filename, distance, url))
 
     return results

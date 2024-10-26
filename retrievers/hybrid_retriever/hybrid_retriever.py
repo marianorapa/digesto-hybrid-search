@@ -4,6 +4,7 @@ import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 import logging
+from utils.url_finder import get_url
 
 BASE_OUTPUT_DIR = "./indexes"
 DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index"
@@ -34,6 +35,9 @@ def create_embedding(query):
 
     return model.encode(query)
 
+def get_document_url(document):
+    return get_url(document[2])
+
 def rerank_documents(relevant_documents_with_cosine_similarity):
     sorted_documents = sorted(relevant_documents_with_cosine_similarity, key=lambda x: x[4], reverse=True)
 
@@ -45,8 +49,8 @@ def rerank_documents(relevant_documents_with_cosine_similarity):
         sparse_rank = sorted_document[3]
 
         score = (1/(k+sparse_rank))+(1/(k+dense_rank))
-
-        sorted_document.extend([dense_rank, score])
+        doc_url = get_document_url(sorted_document)
+        sorted_document.extend([dense_rank, score, doc_url])
         dense_reranked_documents.append(sorted_document)
         dense_rank = dense_rank + 1
 

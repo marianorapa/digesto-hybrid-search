@@ -1,4 +1,6 @@
 import pyterrier as pt
+from utils.url_finder import get_url
+
 
 BASE_OUTPUT_DIR = "./indexes"
 SPARSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/sparse_index"
@@ -22,6 +24,9 @@ INDEXES = {
         "COMPLETE_DISPONE": COMPLETE_DISPONE_OUTPUT_DIR,
 }
 
+def get_url_from_filename(filename):
+        return get_url(filename)
+
 
 def get_relevant_documents_sparse(index, query, k):
         if not pt.started():
@@ -44,7 +49,8 @@ def get_relevant_documents_sparse(index, query, k):
                 score = row['score']
                 rank = row['rank'] + 1
                 filename = meta.getAllItems(doc_id)[1]
-                final_results.append([doc_id, score, filename, rank])
+                doc_url = get_url_from_filename(filename)
+                final_results.append([doc_id, score, filename, rank, doc_url])
 
                 counter += 1
                 if counter == k:
