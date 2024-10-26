@@ -28,5 +28,4 @@ def get_url(file_name):
     if ('/' in file_name):
         key = key.split('/')[-1]
     key = key.split('.')[0]
-    print(key)
     return _file_map.get(key, None)  # Returns None if key is not found
