@@ -69,7 +69,7 @@ def query_current_digest(query, k):
     output = []
     rank = 1
     for link in result_links_URI:
-        full_link = "https://resoluciones.unlu.edu.ar/" + link
+        full_link = "https://resoluciones.unlu.edu.ar/" + link.replace("frame", "view")
         doc_code = get_doc_id(full_link)
         output_entry = [rank, doc_code, full_link]
         output.append(output_entry)
@@ -102,7 +102,7 @@ def query_hybrid(query, k):
     docs = get_relevant_documents_hybrid(default_index, query, k)
     return build_result_list(docs, 4)
 
-def file_was_downloaded(doc_url): 
+def file_was_downloaded(doc_url):
     return get_filename_from_url(doc_url) != None
 
 def not_empty(doc_code):
@@ -123,7 +123,10 @@ def not_deleted(doc_url):
 
 
 def check_doc_was_indexed(doc_code, doc_url):
-    return file_was_downloaded(doc_url) and not_empty(doc_code) and not_deleted(doc_url)
+    file_downloaded = file_was_downloaded(doc_url)
+    not_empty_result = not_empty(doc_code)
+    not_deleted_result = not_deleted(doc_url)
+    return file_downloaded and not_empty_result and not_deleted_result
     
 
 def check_docs_were_indexed(results):
@@ -165,6 +168,7 @@ def query(query, k):
     
     
     current_digest_enriched_results = check_docs_were_indexed(current_digest_results)
-    print(current_digest_enriched_results)
+    for entry in current_digest_enriched_results:
+        print(entry)
 
     # print_results(current_digest_enriched_results, sparse_results, dense_results, hybrid_results)
