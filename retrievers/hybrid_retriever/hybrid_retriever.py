@@ -39,7 +39,9 @@ def get_document_url(document):
     return get_url(document[2])
 
 def rerank_documents(relevant_documents_with_cosine_similarity):
-    sorted_documents = sorted(relevant_documents_with_cosine_similarity, key=lambda x: x[4], reverse=True)
+    # input format: [doc_id, score, filename, sparse_rank, doc_url, cosine_similarity]
+    cosine_similarity_index = 5
+    sorted_documents = sorted(relevant_documents_with_cosine_similarity, key=lambda x: x[cosine_similarity_index], reverse=True)
 
     dense_reranked_documents = []
     k = 60
@@ -48,13 +50,14 @@ def rerank_documents(relevant_documents_with_cosine_similarity):
 
         sparse_rank = sorted_document[3]
 
-        score = (1/(k+sparse_rank))+(1/(k+dense_rank))
-        doc_url = get_document_url(sorted_document)
-        sorted_document.extend([dense_rank, score, doc_url])
+        hybrid_combined_ranks = (1/(k+sparse_rank))+(1/(k+dense_rank))
+        sorted_document.extend([dense_rank, hybrid_combined_ranks])
+        # final format: [doc_id, score, filename, sparse_rank, doc_url, cosine_similarity, dense_rank, hybrid_combined_ranks]
         dense_reranked_documents.append(sorted_document)
         dense_rank = dense_rank + 1
-
-    sorted_reranked_documents = sorted(sorted_documents, key=lambda x: x[6], reverse=True)
+    
+    hybrid_combined_rank_index = 7
+    sorted_reranked_documents = sorted(sorted_documents, key=lambda x: x[hybrid_combined_rank_index], reverse=True)
 
     return sorted_reranked_documents
 
@@ -64,6 +67,7 @@ def get_relevant_documents_hybrid(index, query, k):
 
     relevant_documents_with_cosine_similarity = []
 
+    # returns [doc_id, score, filename, rank, doc_url] for sparse results
     relevant_documents_sparse = get_relevant_documents_sparse(index, query, k)
 
     for relevant_document_sparse in relevant_documents_sparse:
@@ -91,6 +95,7 @@ def get_relevant_documents_hybrid(index, query, k):
             # If embedding is not available
             cosine_similarity = -1
 
+        # relevant_document_sparse ends up being [doc_id, score, filename, rank, doc_url, cosine_similarity]
         relevant_document_sparse.append(cosine_similarity)
         relevant_documents_with_cosine_similarity.append(relevant_document_sparse)
 

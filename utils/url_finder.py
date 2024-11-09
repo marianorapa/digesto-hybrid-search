@@ -15,17 +15,16 @@ def load_file_to_map():
                 if len(parts) < 3:
                     continue  # Skip lines that don't have all three parts
                 
-                key = parts[0].replace('.pdf', '')
-                value = parts[2]
+                value = parts[0].replace('.pdf', '')
+                key = parts[2]
                 _file_map[key] = value
 
-def get_url(file_name):
+def get_filename_from_url(doc_url):
     # Ensure the file map is loaded
     load_file_to_map()
     
     # Remove any extensions from the file_name
-    key = file_name
-    if ('/' in file_name):
-        key = key.split('/')[-1]
-    key = key.split('.')[0]
+    key = doc_url
     return _file_map.get(key, None)  # Returns None if key is not found
+
+

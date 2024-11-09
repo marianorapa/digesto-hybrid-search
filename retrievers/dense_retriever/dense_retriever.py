@@ -57,9 +57,10 @@ def get_relevant_documents_dense(index_name, query, k):
     index, metadata = retrieve_index(index_name)
     D, I = index.search(faiss_query_embedding, k)
     results = []
+    rank = 1
     for distance, i in zip(D[0], I[0]):
         filename = get_filename_from_metadata(metadata, i)
         url = get_url_from_filename(filename)
-        results.append((i, filename, distance, url))
-
+        results.append((rank, i, filename, distance, url))
+        rank =+ 1
     return results
