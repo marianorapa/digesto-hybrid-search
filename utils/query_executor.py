@@ -5,14 +5,14 @@ from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents
 from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
 from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
 
-def execute_query_current_digest(query, k):
-    url = 'https://resoluciones.unlu.edu.ar/busqueda.avanzada.php'
-    headers = {
+def build_headers(session_id): 
+    return {
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
         'Cache-Control': 'max-age=0',
         'Connection': 'keep-alive',
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': f'PHPSESSID={session_id}',
         'DNT': '1',
         'Origin': 'https://resoluciones.unlu.edu.ar',
         'Referer': 'https://resoluciones.unlu.edu.ar/busqueda.avanzada.php?action=replay&busq_id=0&ord=0&page=1',
@@ -26,6 +26,33 @@ def execute_query_current_digest(query, k):
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"macOS"'
     }
+
+
+def get_session_id(base_url):
+    response = requests.get(base_url)
+    return response.cookies.get('PHPSESSID')
+
+def execute_query_current_digest(query, k):
+    base_url = 'https://resoluciones.unlu.edu.ar/busqueda.avanzada.php'
+    session_id = get_session_id(base_url)
+    results = do_execute_query_current_digest(base_url, query, k, session_id)
+    page = 2
+    while len(results) > 0 and len(results) < k:
+        url = base_url + f"?action=replay&busq_id=0&ord=0&page={page}"
+        page_results = do_execute_query_current_digest(url, query, k, session_id)
+        if len(page_results) == 0:
+            print("No more results")
+            break  # No more results on this page, stop fetching more page
+        else:
+            print(f"Fetched {len(page_results)} more results on page {page}")  # Display how many results were fetched on this page
+        results.extend(page_results)
+        page += 1
+        
+    return results
+
+
+def do_execute_query_current_digest(url, query, k, session_id=None):
+    headers = build_headers(session_id)
     data = {
         '_qf__busqrapida': '',
         'pag': '0',
@@ -37,12 +64,10 @@ def execute_query_current_digest(query, k):
 
     # Send POST request
     response = requests.post(url, headers=headers, data=data)
-    
     # Check if the request was successful
     if response.status_code != 200:
         print("Failed to fetch the page")
         return []
-
     # Parse HTML response
     soup = BeautifulSoup(response.text, 'html.parser')
     
