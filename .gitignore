@@ -1,9 +1,20 @@
 /input/
 /venv/
 
-app.log
+*.log
 *.txt
 *.pdf
 .idea/
 *.csv
 *.pyc
+*.bin
+*.json
+*.bf
+*.fsarrayfile
+*.fsomaphash
+*.fsomapid
+*.fsomapfile
+*.idx
+*.zdata
+*.properties
+*.DS_Store
