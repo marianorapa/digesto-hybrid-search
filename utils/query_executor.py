@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents_sparse
 from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
 from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
+from tabulate import tabulate
 
 def execute_query_current_digest(query, k):
     url = 'https://resoluciones.unlu.edu.ar/busqueda.avanzada.php'
@@ -140,24 +141,68 @@ def check_docs_were_indexed(results):
 
     return enriched_docs
 
-def print_results(current_digest_results, sparse_results, dense_results, hybrid_results):
-    print("Current Digest Results:")
-    for entry in current_digest_results:
-        print(entry)
+def check_relevant_docs_where_indexed(relevant_documents):
+    relevant_documents_with_url = []
+    order = 1
+    for relevant_document in relevant_documents:
+        relevant_documents_with_url.append([order, relevant_document, f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={relevant_document}"])
+        order = order + 1
 
+    return check_docs_were_indexed(relevant_documents_with_url)
+
+def print_results(relevant_documents_enriched_results, current_digest_results, sparse_results, dense_results, hybrid_results):
+    
+    empty_result_string = "-"
+
+    if relevant_documents_enriched_results == []:
+        relevant_documents_enriched_results = [[empty_result_string, empty_result_string, empty_result_string]]
+    print("\nRelevant Documents Searched:")
+    table = tabulate(relevant_documents_enriched_results, 
+                    headers=["ID", "URL", "Indexed"],
+                    tablefmt="tsv",
+                    colalign=("center", "center", "center"))
+    print(table)
+
+    if current_digest_results == []:
+        current_digest_results = [[empty_result_string, empty_result_string, empty_result_string]]
+    print("\nCurrent Digest Results:")
+    table = tabulate(current_digest_results, 
+                    headers=["ID", "URL", "Indexed"],
+                    tablefmt="tsv",
+                    colalign=("center", "center", "center"))
+    print(table)
+
+    if sparse_results == []:
+        sparse_results = [[empty_result_string, empty_result_string, empty_result_string]]
     print("\nSparse Results:")
-    for entry in sparse_results:
-        print(entry)
+    table = tabulate(sparse_results, 
+                    headers=["Ranking", "ID", "URL"],
+                    tablefmt="tsv",
+                    colalign=("center", "center", "center"))
+    print(table)
 
+    if dense_results == []:
+            dense_results = [[empty_result_string, empty_result_string, empty_result_string]]
     print("\nDense Results:")
-    for entry in dense_results:
-        print(entry)
+    table = tabulate(dense_results, 
+                    headers=["Ranking", "ID", "URL"],
+                    tablefmt="tsv",
+                    colalign=("center", "center", "center"))
+    print(table)
 
+    if hybrid_results == []:
+            hybrid_results = [[empty_result_string, empty_result_string, empty_result_string]]
     print("\nHybrid Results:")
-    for entry in hybrid_results:
-        print(entry)
+    table = tabulate(hybrid_results, 
+                    headers=["Ranking", "ID", "URL"],
+                    tablefmt="tsv",
+                    colalign=("center", "center", "center"))
+    print(table)
 
-def query(query, k):
+def query(query, k, relevant_documents):
+
+    relevant_documents_enriched_results = check_relevant_docs_where_indexed(relevant_documents)
+
     current_digest_results = query_current_digest(query, k)
     
     sparse_results = query_sparse(query, k)
@@ -166,9 +211,6 @@ def query(query, k):
     
     hybrid_results = query_hybrid(query, k)
     
-    
     current_digest_enriched_results = check_docs_were_indexed(current_digest_results)
-    for entry in current_digest_enriched_results:
-        print(entry)
 
-    # print_results(current_digest_enriched_results, sparse_results, dense_results, hybrid_results)
+    print_results(relevant_documents_enriched_results, current_digest_enriched_results, sparse_results, dense_results, hybrid_results)

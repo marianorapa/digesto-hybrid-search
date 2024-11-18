@@ -51,7 +51,13 @@ def process_option(menu_entry_index):
 def compare_models():
     query = input("Query: ")
     k = int(input("k documentos a recuperar: "))
-    utils.query_executor.query(query, k)
+    input_relevant_documents = input("Doc IDS relevantes a priori conocidos, separados por coma: ")
+    try:
+        relevant_documents = [int(x) for x in input_relevant_documents.split(",")]
+    except:
+        relevant_documents = []
+
+    utils.query_executor.query(query, k, relevant_documents)
 
 
 def retrieve_suboptions():
