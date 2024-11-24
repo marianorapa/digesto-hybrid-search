@@ -31,27 +31,23 @@ def get_session_id(base_url):
     return response.cookies.get('PHPSESSID')
 
 
-def execute_query_current_digest(query, k):
+def execute_query_current_digest(query):
     base_url = 'https://resoluciones.unlu.edu.ar/busqueda.avanzada.php'
     session_id = get_session_id(base_url)
-    results = do_execute_query_current_digest(base_url, query, k, session_id)
+    results = do_execute_query_current_digest(base_url, query, session_id)
     page = 2
-    while len(results) > 0 and len(results) < k:
+    while len(results) > 0:
         url = base_url + f"?action=replay&busq_id=0&ord=0&page={page}"
-        page_results = do_execute_query_current_digest(url, query, k, session_id)
+        page_results = do_execute_query_current_digest(url, query, session_id)
         if len(page_results) == 0:
-            print("No more results")
-            break  # No more results on this page, stop fetching more page
-        else:
-            print(
-                f"Fetched {len(page_results)} more results on page {page}")  # Display how many results were fetched on this page
+            break  # No more results on this page, stop fetching more pages
         results.extend(page_results)
         page += 1
 
     return results
 
 
-def do_execute_query_current_digest(url, query, k, session_id=None):
+def do_execute_query_current_digest(url, query, session_id=None):
     headers = build_headers(session_id)
     data = {
         '_qf__busqrapida': '',
@@ -77,7 +73,7 @@ def do_execute_query_current_digest(url, query, k, session_id=None):
     # Extract hrefs from 'a' elements within each 'boletinDoc' div
     links = []
     i = 0
-    while i < k and i < len(boletin_divs):
+    while i < len(boletin_divs):
         div = boletin_divs[i]
         a_tag = div.find('a', href=True)
         if a_tag:
@@ -90,13 +86,16 @@ def get_relevant_documents_current_digest(index, query, k, relevant_documents_id
     # TODO index modification is not implemented, only querying default index adding parameter to be consistent
     #  with other retrievers
 
-    result_links_URI = execute_query_current_digest(query, k)
+    result_links_URI = execute_query_current_digest(query)
 
     ranking_current_digest = Ranking()
+    ranking_current_digest.set_ranking_name("Rank Current Digest")
+    ranking_current_digest.set_k_documents(k)
     ranking_current_digest.set_relevant_documents_ids(relevant_documents_ids)
 
     for link in result_links_URI:
         document = Document()
         document.set_id_from_url(link)
         ranking_current_digest.add_document(document)
+
     return ranking_current_digest

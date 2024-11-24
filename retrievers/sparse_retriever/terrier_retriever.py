@@ -4,6 +4,7 @@ from utils.objects.document import Document
 from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
 
+RANKING_LIMIT = 140000
 
 BASE_OUTPUT_DIR = "./indexes"
 SPARSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/sparse_index"
@@ -73,7 +74,7 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")
 
-        pipe = pt.rewrite.tokenise("utf") >> pt.BatchRetrieve(index, wmodel="BM25")
+        pipe = pt.rewrite.tokenise("utf") >> pt.BatchRetrieve(index, wmodel="BM25", num_results = RANKING_LIMIT)
 
         query_results = pipe.search(query)
 
@@ -81,6 +82,8 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
 
 
         sparse_ranking = Ranking()
+        sparse_ranking.set_ranking_name("Rank Sparse")
+        sparse_ranking.set_k_documents(k)
         sparse_ranking.set_relevant_documents_ids(relevant_documents_ids)
 
         counter = 0
@@ -94,7 +97,7 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
                 sparse_ranking.add_document(document, row['score'])
 
                 counter += 1
-                if counter == k:
+                if counter == RANKING_LIMIT:
                         break
 
         return sparse_ranking
