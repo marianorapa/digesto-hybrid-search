@@ -111,11 +111,12 @@ def get_ranking_hybrid(default_index, query, k, relevant_documents_ids):
 
     hybrid_ranking = Ranking()
     hybrid_ranking.set_relevant_documents_ids(relevant_documents_ids)
+    hybrid_ranking.set_k_documents(k)
 
     for relevant_document_hybrid in relevant_documents_hybrid:
-        doc_id, score, filename, sparse_rank, doc_url, cosine_similarity, dense_rank, hybrid_combined_ranks = relevant_document_hybrid
+        terrier_doc_id, score, filename, sparse_rank, doc_url, cosine_similarity, dense_rank, hybrid_combined_ranks = relevant_document_hybrid
         document = Document()
-        document.set_id(doc_id)
+        document.set_id_from_url(doc_url)
 
         hybrid_ranking.add_document(document, hybrid_combined_ranks)
 

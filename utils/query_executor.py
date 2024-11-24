@@ -35,31 +35,56 @@ def query(query, k, relevant_documents_ids):
         ranking_of_relevant_documents.add_document(document)
 
     ranking_of_relevant_documents.set_output_columns(["ID", "URL", "Indexed"])
-    print("\nRelevant Documents Searched:")
-    print(ranking_of_relevant_documents)
 
     current_digest_ranking = query_current_digest(query, k, relevant_documents_ids)
     current_digest_ranking.set_relevant_documents_ids(relevant_documents_ids)
-    current_digest_ranking.set_output_columns(["Order", "ID", "URL", "Indexed", "Relevant", "Rank Sparse", "Rank Dense", "Rank Hybrid"])
-    print("\nCurrent Digest Results:")
-    print(current_digest_ranking)
+    current_digest_ranking.set_output_columns(["Order", "ID", "URL", "Indexed", "Relevant"])
     
     sparse_ranking = query_sparse(query, k, relevant_documents_ids)
-    print("\nSparse Results:")
     sparse_ranking.set_output_columns(
-        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
-    print(sparse_ranking)
+        ["Order", "ID", "URL", "Relevant"])
+    
     
     dense_ranking = query_dense(query, k, relevant_documents_ids)
-    print("\nDense Results:")
     dense_ranking.set_output_columns(
-        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
-    print(dense_ranking)
+        ["Order", "ID", "Score", "URL", "Relevant"])
+    
     
     hybrid_ranking = query_hybrid(query, k, relevant_documents_ids)
     print("\nHybrid Results:")
     hybrid_ranking.set_output_columns(
-        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
-    #TODO: Sparse Score - Dense Score
-    print(hybrid_ranking)
+        ["Order", "ID", "Score", "URL", "Relevant"])
     
+    # Set reference rankings to compare positions over different systems
+    current_digest_ranking.add_reference_ranking(sparse_ranking)
+    current_digest_ranking.add_reference_ranking(dense_ranking)
+
+    ranking_of_relevant_documents.add_reference_ranking(current_digest_ranking)
+    ranking_of_relevant_documents.add_reference_ranking(dense_ranking)
+    ranking_of_relevant_documents.add_reference_ranking(sparse_ranking)
+
+    sparse_ranking.add_reference_ranking(current_digest_ranking)
+
+    dense_ranking.add_reference_ranking(current_digest_ranking)
+
+    hybrid_ranking.add_reference_ranking(current_digest_ranking)
+    hybrid_ranking.add_reference_ranking(sparse_ranking)
+    hybrid_ranking.add_reference_ranking(dense_ranking)
+
+    print("\nRelevant Documents Searched:")
+    print(ranking_of_relevant_documents)
+    
+    # Print results from all systems
+
+    print(f"\nCurrent Digest Results (Total {current_digest_ranking.get_last_rank()}):")
+    print(current_digest_ranking.get_first_k_documents_as_table())
+    
+    print(f"\nSparse Results (Total {sparse_ranking.get_last_rank()}):")
+    print(sparse_ranking.get_first_k_documents_as_table())
+
+    print(f"\nDense Results (Total {dense_ranking.get_last_rank()}):")
+    print(dense_ranking.get_first_k_documents_as_table())
+
+    print(f"\nHybrid Results (Total {hybrid_ranking.get_last_rank()}):")
+    print(hybrid_ranking.get_first_k_documents_as_table())
+
