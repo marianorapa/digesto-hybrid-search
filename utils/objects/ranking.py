@@ -13,8 +13,7 @@ class Ranking():
         self.output_columns_keys = ["ID"]
 
     def add_document(self, document, score=None):
-        #TODO Add Score
-        self.documents.append(document)
+        self.documents.append([document, score])
 
     def set_relevant_documents_ids(self, relevant_documents_ids):
         self.relevant_documents_ids = relevant_documents_ids
@@ -33,7 +32,7 @@ class Ranking():
 
         order = 1
         document: Document
-        for document in self.documents:
+        for document, score in self.documents:
             element_of_list = []
             for key in self.output_columns_keys:
                 if key == "ID":
@@ -54,6 +53,8 @@ class Ranking():
                     element_of_list.append("TODO")
                 if key == "Rank Current Digest":
                     element_of_list.append("TODO")
+                if key == "Score":
+                    element_of_list.append(score)
 
             order += 1
 

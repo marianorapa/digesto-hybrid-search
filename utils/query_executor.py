@@ -47,18 +47,19 @@ def query(query, k, relevant_documents_ids):
     sparse_ranking = query_sparse(query, k, relevant_documents_ids)
     print("\nSparse Results:")
     sparse_ranking.set_output_columns(
-        ["Order", "ID", "URL", "Relevant", "Rank Current Digest"])
+        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
     print(sparse_ranking)
     
     dense_ranking = query_dense(query, k, relevant_documents_ids)
     print("\nDense Results:")
     dense_ranking.set_output_columns(
-        ["Order", "ID", "URL", "Relevant", "Rank Current Digest"])
+        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
     print(dense_ranking)
     
     hybrid_ranking = query_hybrid(query, k, relevant_documents_ids)
     print("\nHybrid Results:")
     hybrid_ranking.set_output_columns(
-        ["Order", "ID", "URL", "Relevant", "Rank Current Digest"])
+        ["Order", "ID", "Score", "URL", "Relevant", "Rank Current Digest"])
+    #TODO: Sparse Score - Dense Score
     print(hybrid_ranking)
     

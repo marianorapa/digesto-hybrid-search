@@ -4,6 +4,9 @@ import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 import logging
+
+from utils.objects.document import Document
+from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
 
 BASE_OUTPUT_DIR = "./indexes"
@@ -100,3 +103,24 @@ def get_relevant_documents_hybrid(index, query, k):
         relevant_documents_with_cosine_similarity.append(relevant_document_sparse)
 
     return rerank_documents(relevant_documents_with_cosine_similarity)
+
+
+def get_ranking_hybrid(default_index, query, k, relevant_documents_ids):
+    # TODO Construct raking in runtime: Do not use previous function, to avoid iterating throw result.
+    relevant_documents_hybrid = get_relevant_documents_hybrid(default_index, query, k)
+
+    hybrid_ranking = Ranking()
+    hybrid_ranking.set_relevant_documents_ids(relevant_documents_ids)
+
+    for relevant_document_hybrid in relevant_documents_hybrid:
+        doc_id, score, filename, sparse_rank, doc_url, cosine_similarity, dense_rank, hybrid_combined_ranks = relevant_document_hybrid
+        document = Document()
+        document.set_id(doc_id)
+
+        hybrid_ranking.add_document(document, hybrid_combined_ranks)
+
+    return hybrid_ranking
+
+
+
+
