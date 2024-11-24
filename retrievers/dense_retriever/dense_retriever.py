@@ -3,6 +3,9 @@ import faiss
 import json
 import os
 import glob
+
+from utils.objects.document import Document
+from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
 
 BASE_OUTPUT_DIR = "./indexes"
@@ -64,3 +67,27 @@ def get_relevant_documents_dense(index_name, query, k):
         results.append((rank, i, filename, distance, url))
         rank =+ 1
     return results
+
+
+def get_ranking_dense(index_name, query, k, relevant_documents_ids):
+    # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
+    # devuelve los docs
+
+    query_embedding = model.encode(query)
+    faiss_query_embedding = query_embedding.reshape(1, -1)
+
+    index, metadata = retrieve_index(index_name)
+    D, I = index.search(faiss_query_embedding, k)
+
+    dense_ranking = Ranking()
+    dense_ranking.set_relevant_documents_ids(relevant_documents_ids)
+
+    for distance, i in zip(D[0], I[0]):
+        filename = get_filename_from_metadata(metadata, i)
+        url = get_url_from_filename(filename)
+
+        document = Document()
+        document.set_id_from_url(url)
+        dense_ranking.add_document(document, distance)
+
+    return dense_ranking
