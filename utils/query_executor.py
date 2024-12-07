@@ -51,17 +51,26 @@ def query(query, k, relevant_documents_ids):
     
     
     hybrid_ranking = query_hybrid(query, k, relevant_documents_ids)
-    print("\nHybrid Results:")
     hybrid_ranking.set_output_columns(
+        ["Order", "ID", "Score", "URL", "Relevant"])
+
+    sparse_ranking.set_score_type("Score")
+    dense_ranking.set_score_type("Distance")
+    hybrid_ranking_score_interpolated = sparse_ranking.merge_interpolating_score(dense_ranking)
+    hybrid_ranking_score_interpolated.set_output_columns(
         ["Order", "ID", "Score", "URL", "Relevant"])
     
     # Set reference rankings to compare positions over different systems
     current_digest_ranking.add_reference_ranking(sparse_ranking)
     current_digest_ranking.add_reference_ranking(dense_ranking)
+    current_digest_ranking.add_reference_ranking(hybrid_ranking)
+    current_digest_ranking.add_reference_ranking(hybrid_ranking_score_interpolated)
 
     ranking_of_relevant_documents.add_reference_ranking(current_digest_ranking)
     ranking_of_relevant_documents.add_reference_ranking(dense_ranking)
     ranking_of_relevant_documents.add_reference_ranking(sparse_ranking)
+    ranking_of_relevant_documents.add_reference_ranking(hybrid_ranking)
+    ranking_of_relevant_documents.add_reference_ranking(hybrid_ranking_score_interpolated)
 
     sparse_ranking.add_reference_ranking(current_digest_ranking)
 
@@ -70,6 +79,11 @@ def query(query, k, relevant_documents_ids):
     hybrid_ranking.add_reference_ranking(current_digest_ranking)
     hybrid_ranking.add_reference_ranking(sparse_ranking)
     hybrid_ranking.add_reference_ranking(dense_ranking)
+
+    hybrid_ranking_score_interpolated.add_reference_ranking(current_digest_ranking)
+    hybrid_ranking_score_interpolated.add_reference_ranking(hybrid_ranking)
+    hybrid_ranking_score_interpolated.add_reference_ranking(sparse_ranking)
+    hybrid_ranking_score_interpolated.add_reference_ranking(dense_ranking)
 
     print("\nRelevant Documents Searched:")
     print(ranking_of_relevant_documents)
@@ -85,6 +99,9 @@ def query(query, k, relevant_documents_ids):
     print(f"\nDense Results (Total {dense_ranking.get_last_rank()}):")
     print(dense_ranking.get_first_k_documents_as_table())
 
-    print(f"\nHybrid Results (Total {hybrid_ranking.get_last_rank()}):")
+    print(f"\nHybrid Results Rank Interpolated (Total {hybrid_ranking.get_last_rank()}):")
     print(hybrid_ranking.get_first_k_documents_as_table())
+
+    print(f"\nHybrid Results Score Interpolated (Total {hybrid_ranking_score_interpolated.get_last_rank()}):")
+    print(hybrid_ranking_score_interpolated.get_first_k_documents_as_table())
 

@@ -112,6 +112,7 @@ def get_ranking_hybrid(default_index, query, k, relevant_documents_ids):
     relevant_documents_hybrid = get_relevant_documents_hybrid(default_index, query, k)
 
     hybrid_ranking = Ranking()
+    hybrid_ranking.set_ranking_name("Hybrid Ranking Interpolating Rank")
     hybrid_ranking.set_relevant_documents_ids(relevant_documents_ids)
     hybrid_ranking.set_k_documents(k)
 
