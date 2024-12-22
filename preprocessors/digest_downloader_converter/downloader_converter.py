@@ -3,17 +3,20 @@ import requests
 from tqdm import tqdm
 import os
 import logging
-import urllib
-from pypdf import PdfReader
+import time
+from utils.objects.document import Document
+from utils.objects.metadata import Metadata
 
+config = os.environ
+metadata = Metadata(config["DOWNLOADER_CONVERTER_META_FILE"])
 
-BASE_COLLECTION_DIR = "./collection"
-COMPLETE_COLLECTION_DIR = "/completa"
-RESOLUTION_DIR = BASE_COLLECTION_DIR + COMPLETE_COLLECTION_DIR + "/resuelve"
-DISPOSITION_DIR = BASE_COLLECTION_DIR + COMPLETE_COLLECTION_DIR + "/dispone"
+BASE_COLLECTION_DIR = config["COLLECTION_DIR"]
+RESOLUTION_DIR = config["RESOLUTIONS_DIR"]
+DISPOSITION_DIR = config["DISPOSITIONS_DIR"]
 
-BASE_DIR = "./preprocessors/digest_downloader_converter"
-RAW_OUTPUT_DIR = f"{BASE_DIR}/raw/"
+DOWNLOADS_NOT_FOUND = config["DOWNLOADER_CONVERTER_NOT_FOUND_DOCS"]
+RAW_OUTPUT_DIR = config["DOWNLOADER_CONVERTER_RAW"]
+
 
 def create_directories():
     if not os.path.exists(RAW_OUTPUT_DIR):
@@ -22,37 +25,19 @@ def create_directories():
     if not os.path.exists(BASE_COLLECTION_DIR):
         os.mkdir(BASE_COLLECTION_DIR)
 
-    if not os.path.exists(BASE_COLLECTION_DIR + COMPLETE_COLLECTION_DIR):
-        os.mkdir(BASE_COLLECTION_DIR + COMPLETE_COLLECTION_DIR)
-
     if not os.path.exists(RESOLUTION_DIR):
         os.mkdir(RESOLUTION_DIR)
 
     if not os.path.exists(DISPOSITION_DIR):
         os.mkdir(DISPOSITION_DIR)
 
-def remove_exp_fragment(text):
-    # Define the regular expression pattern to match the fragment
-    pattern = r'EXP-LUJ:\s*\d+/\d+'
 
-    # Replace the matched fragment with an empty string
-    cleaned_text = re.sub(pattern, '', text)
-
-    return cleaned_text.strip()
-
-def parse_pdf_content(filepath):
-    reader = PdfReader(filepath)
-    text = ""
-    for page in reader.pages:  # iterate the document pages
-        text += page.extract_text()
-    return remove_exp_fragment(text)
-
-def save_parsed_text(cleaned_file_name, parsed_text):
+def save_parsed_text(parsed_text, document: Document):
     filepath = ""
-    if cleaned_file_name.startswith("RES"):
-        filepath = RESOLUTION_DIR + "/" + cleaned_file_name
-    elif cleaned_file_name.startswith("DISP"):
-        filepath = DISPOSITION_DIR + "/" + cleaned_file_name
+    if document.is_resolution():
+        filepath = RESOLUTION_DIR + "/" + document.cleaned_filename()
+    elif document.is_disposition():
+        filepath = DISPOSITION_DIR + "/" + document.cleaned_filename()
 
     filepath = filepath.replace("pdf", "txt")
 
@@ -61,33 +46,32 @@ def save_parsed_text(cleaned_file_name, parsed_text):
 
     with open(filepath, "w") as file:
         file.write(parsed_text)
+    document.set_text_path(filepath)
+
 
 def process_not_found_document(filename, url):
-    with open(f'{BASE_DIR}/downloads-not-founds.txt', 'a', encoding="utf-8") as file:
+    with open(DOWNLOADS_NOT_FOUND, 'a', encoding="utf-8") as file:
         file.write(f"{filename},{url}\n")
+
 
 def not_found_document(content):
     return "El documento que ha solicitado no existe." in str(content) or "No tiene permisos suficientes para ver este documento." in str(content)
 
+
 def process_valid_document(file_name, response, url):
-    cleaned_file_name = urllib.parse.quote_plus(file_name)
+    document = Document(url=url, content_bytes=response.content, file_name=file_name)
+    save_as_pdf(document)
 
-    filepath = save_complete_pdf(cleaned_file_name, response)
-
-
-    parsed_text = parse_pdf_content(filepath)
-
+    parsed_text = document.to_text()
 
     if len(parsed_text) > 1:
-        with open(f'{BASE_DIR}/downloads-meta.txt', 'a', encoding="utf-8") as file:
-            file.write(f"{cleaned_file_name},{file_name},{url}\n")
-
-        save_parsed_text(cleaned_file_name, parsed_text)
+        save_parsed_text(parsed_text, document)
+        metadata.success(document)
     else:
-        with open(f'{BASE_DIR}/downloads-empty.txt', 'a', encoding="utf-8") as file:
-            file.write(f"{file_name},{url}\n")
+        metadata.error(document, "Empty doc") # TODO: enum/class for error
 
-def process_document_from_url(url, index):
+
+def process_document_from_url(url, index, retry_number=0):
     # Make an HTTP GET request to download the PDF file
     response = requests.get(url, stream=True)
 
@@ -104,26 +88,34 @@ def process_document_from_url(url, index):
             process_valid_document(file_name, response, url)
 
     else:
-        logging.warning(f"Failed to download {url}. Status code: {response.status_code}")
+        retry_number = retry_number + 1
+        if retry_number < 5:
+            logging.warning(f"Failed to download {url}. Status code: {response.status_code}, Retrying...")
+            time.sleep(10)
+            process_document_from_url(url, index, retry_number=retry_number)
+        else:
+            logging.error(f"Failed to download {url}. Status code: {response.status_code}, Retries exceeded")
 
 
-def save_complete_pdf(cleaned_file_name, response):
-    filepath = RAW_OUTPUT_DIR + cleaned_file_name
+def save_as_pdf(document: Document):
+
+    filepath = RAW_OUTPUT_DIR + document.cleaned_filename()
 
     if os.path.isfile(filepath):
         logging.warning(f"{filepath} already exist when trying to save")
 
     with open(filepath, "wb") as file:
-        file.write(response.content)
+        file.write(document.content_bytes)
+    document.set_pdf_path(filepath)
 
     return filepath
 
 
-def download_documents(id_from: int, id_to: int):
+def download_documents(number_of_docs: int):
 
     create_directories()
 
-    for i in tqdm(range(id_from, id_to + 1)):
+    for i in tqdm(range(0, number_of_docs + 1)):
         try:
             url = f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={i}"
             process_document_from_url(url, i)
@@ -132,21 +124,10 @@ def download_documents(id_from: int, id_to: int):
             logging.warning(f"Skipping process of URL {url}. Exception {e}")
             continue
 
-    return id_to + 1
+    return number_of_docs + 1
 
 
-def download_and_convert(doc_id_from, doc_id_to):
+def download_and_convert(doc_id_to):
     logging.info("Downloader Converter Started")
-
-    progress_file = f'{BASE_DIR}/downloads-progress.txt'
-    try:
-        with open(progress_file, 'r') as file:
-            # Read the single value from the file
-            value = file.readline().strip()
-    except FileNotFoundError as e:
-        value = "0"
-
-    last_id = download_documents(max(doc_id_from, int(value)), doc_id_to)
-
-    with open(progress_file, 'w', encoding="utf-8") as file:
-        file.write(str(last_id))
+    download_documents(doc_id_to)
+    metadata.save()

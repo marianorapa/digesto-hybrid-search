@@ -1,5 +1,7 @@
 from utils.url_finder import get_filename_from_url
-
+import urllib
+from pypdf import PdfReader
+import re
 
 def file_was_downloaded(doc_url):
     return get_filename_from_url(doc_url) != None
@@ -27,9 +29,18 @@ def check_doc_was_indexed(doc_code, doc_url):
     return file_downloaded and not_empty_result and not_deleted_result
     
 class Document:
-    def __init__(self):
+    def __init__(self, url, content_bytes, file_name):
         self.id = None
-        self.url = None
+        self.url = url
+        if url:
+            self.set_id_from_url(url)
+        self.content_bytes = content_bytes
+        self.file_name = file_name
+        self.pdf_path = None
+        self.txt_path = None
+        self.successful = None
+        self.error_type = None
+        
 
     def get_id(self):
         return self.id
@@ -45,3 +56,57 @@ class Document:
 
     def is_indexed(self):
         return check_doc_was_indexed(self.get_id(), self.get_url())
+
+    def cleaned_filename(self):
+        return urllib.parse.quote_plus(self.file_name)
+    
+    def set_pdf_path(self, path):
+        self.pdf_path = path
+    
+    def set_text_path(self, path):
+        self.text_path = path
+
+    def to_text(self):
+        reader = PdfReader(self.pdf_path)
+        text = ""
+        for page in reader.pages:  # iterate the document pages
+            text += page.extract_text()
+        return self.remove_exp_fragment(text)
+    
+    def remove_exp_fragment(self, text):
+        # Define the regular expression pattern to match the fragment
+        pattern = r'EXP-LUJ:\s*\d+/\d+'
+
+        # Replace the matched fragment with an empty string
+        cleaned_text = re.sub(pattern, '', text)
+
+        return cleaned_text.strip()
+
+    
+    def success(self):
+        self.successful = True
+        return self
+    
+    def is_success(self):
+        return self.successful
+        
+    def error(self, error):
+        self.successful = False
+        self.error_type = error
+        return self
+    
+    def is_resolution(self):
+        return self.cleaned_filename().startswith("RES")
+    
+    def is_disposition(self):
+        return self.cleaned_filename().startswith("DISP")
+    
+    def to_json(self):
+        return {
+            "id": self.id,
+            "url": self.url,
+            "pdf_path": self.pdf_path,
+            "text_path": self.text_path,
+            "successful": self.successful,
+            "error": self.error_type if self.error_type else None
+        }
