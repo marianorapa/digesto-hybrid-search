@@ -29,7 +29,7 @@ def check_doc_was_indexed(doc_code, doc_url):
     return file_downloaded and not_empty_result and not_deleted_result
     
 class Document:
-    def __init__(self, url, content_bytes, file_name):
+    def __init__(self, url = None, content_bytes = None, file_name = None):
         self.id = None
         self.url = url
         if url:
@@ -38,6 +38,7 @@ class Document:
         self.file_name = file_name
         self.pdf_path = None
         self.txt_path = None
+        self.txt_file_name = None
         self.successful = None
         self.error_type = None
         
@@ -63,15 +64,25 @@ class Document:
     def set_pdf_path(self, path):
         self.pdf_path = path
     
-    def set_text_path(self, path):
-        self.text_path = path
+    def set_txt_path(self, path):
+        self.txt_path = path
+    
+    def get_txt_filename(self):
+        return self.cleaned_filename().replace('pdf', 'txt')
+    
+    def get_text_path(self):
+        return self.txt_path
 
-    def to_text(self):
-        reader = PdfReader(self.pdf_path)
-        text = ""
-        for page in reader.pages:  # iterate the document pages
-            text += page.extract_text()
-        return self.remove_exp_fragment(text)
+    def get_text_content(self):
+        if self.txt_path is None:
+            reader = PdfReader(self.pdf_path)
+            text = ""
+            for page in reader.pages:  # iterate the document pages
+                text += page.extract_text()
+            return self.remove_exp_fragment(text)
+        else:
+            with open(self.txt_path, 'r') as file:
+                return file.read().strip()
     
     def remove_exp_fragment(self, text):
         # Define the regular expression pattern to match the fragment
@@ -105,8 +116,20 @@ class Document:
         return {
             "id": self.id,
             "url": self.url,
+            "file_name": self.file_name,
             "pdf_path": self.pdf_path,
-            "text_path": self.text_path,
+            "txt_path": self.txt_path,
             "successful": self.successful,
             "error": self.error_type if self.error_type else None
         }
+    
+    def from_json(json):
+        document = Document()
+        document.id = json["id"]
+        document.url = json["url"]
+        document.file_name = json["file_name"]
+        document.pdf_path = json["pdf_path"]
+        document.txt_path = json["txt_path"]
+        document.successful = json["successful"]
+        document.error_type = json["error"] if "error" in json else None
+        return document

@@ -15,7 +15,7 @@ RESOLUTION_DIR = config["RESOLUTIONS_DIR"]
 DISPOSITION_DIR = config["DISPOSITIONS_DIR"]
 
 DOWNLOADS_NOT_FOUND = config["DOWNLOADER_CONVERTER_NOT_FOUND_DOCS"]
-RAW_OUTPUT_DIR = config["DOWNLOADER_CONVERTER_RAW"]
+RAW_OUTPUT_DIR = config["DOWNLOADER_CONVERTER_RAW_DIR"]
 
 
 def create_directories():
@@ -35,18 +35,16 @@ def create_directories():
 def save_parsed_text(parsed_text, document: Document):
     filepath = ""
     if document.is_resolution():
-        filepath = RESOLUTION_DIR + "/" + document.cleaned_filename()
+        filepath = RESOLUTION_DIR + "/" + document.get_txt_filename()
     elif document.is_disposition():
-        filepath = DISPOSITION_DIR + "/" + document.cleaned_filename()
-
-    filepath = filepath.replace("pdf", "txt")
+        filepath = DISPOSITION_DIR + "/" + document.get_txt_filename()
 
     if os.path.isfile(filepath):
         logging.warning(f"{filepath} already exist when trying to save")
 
     with open(filepath, "w") as file:
         file.write(parsed_text)
-    document.set_text_path(filepath)
+    document.set_txt_path(filepath)
 
 
 def process_not_found_document(filename, url):
@@ -62,7 +60,7 @@ def process_valid_document(file_name, response, url):
     document = Document(url=url, content_bytes=response.content, file_name=file_name)
     save_as_pdf(document)
 
-    parsed_text = document.to_text()
+    parsed_text = document.get_text_content()
 
     if len(parsed_text) > 1:
         save_parsed_text(parsed_text, document)
