@@ -121,3 +121,4 @@ def download_and_convert(doc_id_to):
     logger.info("Downloader Converter Started")
     download_documents(doc_id_to)
     metadata.save()
+    logger.info("Downloader Converter Ended")

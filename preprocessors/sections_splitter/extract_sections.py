@@ -103,3 +103,5 @@ def extract_sections():
     #    with open(config["EXTRACT_SECTIONS_META_FILE"], 'w') as file:
     #        file.writelines(str(failures_resuelve))
     #        file.writelines(str(failures_dispone))
+
+    logger.info("Sections Splitter Ended")

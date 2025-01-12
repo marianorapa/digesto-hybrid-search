@@ -9,6 +9,9 @@ from utils.file_eraser import erase_file_from_everywhere
 import faiss
 import json
 
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
+# TODO: Add env variables like previous modules
 BASE_INPUT_DIR = "./collection"
 VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/sentences"
 CONSIDERANDO_INPUT_DIR = f"{BASE_INPUT_DIR}/considerando/sentences"
@@ -28,6 +31,7 @@ COMPLETE_COMPLETE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/completa"
 COMPLETE_RESUELVE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/resuelve"
 COMPLETE_DISPONE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/dispone"
 
+# TODO: Refactor create_directories like previous modules
 def create_directories():
     if not os.path.exists(BASE_OUTPUT_DIR):
         os.mkdir(BASE_OUTPUT_DIR)
@@ -72,7 +76,7 @@ def create_embedding(model, sentence):
 
 def get_mean_of_embeddings_and_save(sentence_embeddings, OUTPUT_DIR, FILE):
     if len(sentence_embeddings) == 0:
-        logging.error(f"{FILE} without sentence embeddings in {OUTPUT_DIR}")
+        logger.error(f"{FILE} without sentence embeddings in {OUTPUT_DIR}")
         return
     elif len(sentence_embeddings) == 1:
         embedding = sentence_embeddings[0]
@@ -116,14 +120,14 @@ def mean_sections_embeddings(filename, dense_indexes):
             #embeddings.append(np.loadtxt(f"{VISTO_OUTPUT_DIR}/{filename}"))
             section_embeddings["visto"] = np.loadtxt(f"{VISTO_OUTPUT_DIR}/{filename}")
     else:
-        logging.error(f"File not exist {VISTO_OUTPUT_DIR}/{filename}")
+        logger.error(f"File not exist {VISTO_OUTPUT_DIR}/{filename}")
 
     if os.path.exists(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}"):
         with open(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}", "r") as f:
             #embeddings.append(np.loadtxt(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}"))
             section_embeddings["considerando"] = np.loadtxt(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}")
     else:
-        logging.error(f"File not exist {CONSIDERANDO_OUTPUT_DIR}/{filename}")
+        logger.error(f"File not exist {CONSIDERANDO_OUTPUT_DIR}/{filename}")
 
     if os.path.exists(f"{RESUELVE_OUTPUT_DIR}/{filename}") or os.path.exists(f"{DISPONE_OUTPUT_DIR}/{filename}"):
         if os.path.exists(f"{RESUELVE_OUTPUT_DIR}/{filename}"):
@@ -135,7 +139,7 @@ def mean_sections_embeddings(filename, dense_indexes):
                 #embeddings.append(np.loadtxt(f"{DISPONE_OUTPUT_DIR}/{filename}"))
                 section_embeddings["dispone"] = np.loadtxt(f"{DISPONE_OUTPUT_DIR}/{filename}")
     else:
-        logging.error(f"File not exist {RESUELVE_OUTPUT_DIR}/{filename} or {DISPONE_OUTPUT_DIR}/{filename}")
+        logger.error(f"File not exist {RESUELVE_OUTPUT_DIR}/{filename} or {DISPONE_OUTPUT_DIR}/{filename}")
 
    #if len(embeddings) == 3:
     if len(section_embeddings.keys()) == 3: 
@@ -154,9 +158,9 @@ def mean_sections_embeddings(filename, dense_indexes):
             add_to_dense_index(dense_indexes, document_embedding, "disposiciones", filename)
             add_to_dense_index(dense_indexes, document_embedding, "completo", filename)
         else:
-            logging.error(f"File not exist {COMPLETE_RESUELVE_OUTPUT_DIR}/{filename} or {COMPLETE_DISPONE_OUTPUT_DIR}/{filename}")
+            logger.error(f"File not exist {COMPLETE_RESUELVE_OUTPUT_DIR}/{filename} or {COMPLETE_DISPONE_OUTPUT_DIR}/{filename}")
     else:
-        logging.error(f"Couldnt find all embedings for file {filename}")
+        logger.error(f"Couldnt find all embedings for file {filename}")
         erase_file_from_everywhere(filename, "MISSING_EMBEDDINGS")
 
 
@@ -168,7 +172,7 @@ def generate_documents_embeddings(dense_indexes):
                 filename = line.split(",")[0]
                 deleted_files.append(filename)
     except FileNotFoundError: 
-        logging.info("No deleted-files.txt file found")
+        logger.info("No deleted-files.txt file found")
 
     with open("./preprocessors/digest_downloader_converter/downloads-meta.txt") as f:
         for line in f.readlines():
@@ -215,7 +219,7 @@ def persist_dense_indexes(dense_indexes):
 
 
 def generate_embeddings():
-    logging.info("Dense Indexer Started")
+    logger.info("Dense Indexer Started")
 
     create_directories()
 
@@ -228,6 +232,8 @@ def generate_embeddings():
     generate_documents_embeddings(dense_indexes)
 
     persist_dense_indexes(dense_indexes)
+
+    logger.info("Dense Indexer Ended")
 
    
 

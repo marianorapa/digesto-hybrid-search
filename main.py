@@ -60,9 +60,6 @@ from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_
 from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
 import utils.query_executor
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
-
 DOWNLOAD_INDEX_DOCS = 0
 DOWNLOAD_DOCS = 1
 INDEX_DOCS = 2
@@ -92,7 +89,13 @@ def process_option(menu_entry_index):
     elif menu_entry_index == COMPARE_MODELS:
         compare_models()
     elif menu_entry_index == CLEAR:
-        clear_execution_dirs()
+        confirmation = input(
+            "¿Estás seguro de que querés limpiar el entorno? Esto eliminará archivos. (s/n): ").strip().lower()
+        if confirmation == "s":
+            clear_execution_dirs()
+            print("El entorno ha sido limpiado.")
+        else:
+            print("Operación cancelada.")
 
 def compare_models():
     query = input("Query: ")

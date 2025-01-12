@@ -1,11 +1,11 @@
 import os
-from sentence_transformers import SentenceTransformer
 import nltk
 import re
-from tqdm import tqdm
 import csv
 import logging
 from utils.file_eraser import erase_file_from_everywhere
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
 
 BASE_OUTPUT_DIR = "./collection"
 
@@ -41,13 +41,13 @@ def split_sentences_from_dir(es_tokenizer, dir):
                 sentences = split_sentences_from_text(es_tokenizer, text)
 
                 if len(sentences) <= 0:
-                    logging.error("File without sentences {dir}/{file}")  
+                    logger.error("File without sentences {dir}/{file}")
                     erase_file_from_everywhere(file, "NO_SENTENCES")
                     
                 save_file(dir + '/sentences/' + file, sentences)
 
 def split_sentences():
-    logging.info("Sentence Splitter Started")
+    logger.info("Sentence Splitter Started")
     nltk.download('punkt')
     es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
     #model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
@@ -56,3 +56,5 @@ def split_sentences():
     split_sentences_from_dir(es_tokenizer, CONSIDERANDO_DIR)
     split_sentences_from_dir(es_tokenizer, DISPONE_DIR)
     split_sentences_from_dir(es_tokenizer, RESUELVE_DIR)
+
+    logger.info("Sentence Splitter Ended")
