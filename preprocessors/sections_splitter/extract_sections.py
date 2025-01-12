@@ -3,8 +3,6 @@ import os
 import logging
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
-#from tqdm import tqdm
-#from utils.file_eraser import erase_file_from_everywhere
 
 config = os.environ
 
@@ -15,18 +13,25 @@ extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"])
 keywords = ["VISTO:", "CONSIDERANDO:"]
 last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
 
+
+def documents_dir(base_dir: str):
+    return base_dir + '/documents'
+
 def create_directories():
-    if not os.path.exists(config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"])
+    if not os.path.exists(documents_dir(config["SECTION_VISTO_DIR"])):
+        os.makedirs(documents_dir(config["SECTION_VISTO_DIR"]))
 
-    if not os.path.exists(config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"])
+    if not os.path.exists(documents_dir(config["SECTION_CONSIDERANDO_DIR"])):
+        os.makedirs(documents_dir(config["SECTION_CONSIDERANDO_DIR"]))
 
-    if not os.path.exists(config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"])
+    if not os.path.exists(documents_dir(config["SECTION_RESUELVE_DIR"])):
+        os.makedirs(documents_dir(config["SECTION_RESUELVE_DIR"]))
 
-    if not os.path.exists(config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"])
+    if not os.path.exists(documents_dir(config["SECTION_DISPONE_DIR"])):
+        os.makedirs(documents_dir(config["SECTION_DISPONE_DIR"]))
+    
+    if not os.path.exists(documents_dir(config["SECTION_RESOLUTIVA_DIR"])):
+        os.makedirs(documents_dir(config["SECTION_RESOLUTIVA_DIR"]))
 
 def extract_sections_from_document(document: Document) -> list[str]:
     text = document.get_text_content()
@@ -50,8 +55,13 @@ def extract_sections_from_document(document: Document) -> list[str]:
     return [section.strip() for section in sections if section.strip()][-3:]
 
 def save_section(document: Document, section_text: str, output_dir: str):
-    with open(f"{output_dir}/{document.get_txt_filename()}", "w") as output:
-        output.write(section_text)
+    try:
+        output_file = f"{output_dir}/{document.get_txt_filename()}"
+        with open(output_file, "w") as output:
+            output.write(section_text)
+        return output_file
+    except Exception as e:
+        extract_sections_metadata.error(document, f"Failure {e} saving section to {output_dir}")
 
 def do_extract_sections():
     downloader_converter_valid_documents = downloader_converter_metadata.get_valid_documents()
@@ -65,48 +75,31 @@ def do_extract_sections():
             extract_sections_metadata.error(document, "Less than 3 sections")
             pass
 
-        save_section(document, sections[0], config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"])
-        save_section(document, sections[1], config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"])
+        visto_section = sections[0]
+        considerando_section = sections[1]
+        resolutiva_section = sections[2]
+        
+        visto_file = save_section(document, visto_section, documents_dir(config["SECTION_VISTO_DIR"]))
+        document.set_visto_file_path(visto_file)
+
+        considerando_file = save_section(document, considerando_section, documents_dir(config["SECTION_CONSIDERANDO_DIR"]))
+        document.set_considerando_file_path(considerando_file)
+        
+        resolutiva_file = save_section(document, resolutiva_section, documents_dir(config["SECTION_RESOLUTIVA_DIR"]))
+        document.set_resolutiva_file_path(resolutiva_file)
 
         if document.is_resolution():
-            save_section(document, sections[2], config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"])
+            resuelve_file = save_section(document, resolutiva_section, documents_dir(config["SECTION_RESUELVE_DIR"]))
+            document.set_resuelve_file_path(resuelve_file)
 
         elif document.is_disposition():
-            save_section(document, sections[2], config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"])
+            dispone_file = save_section(document, resolutiva_section, documents_dir(config["SECTION_DISPONE_DIR"]))
+            document.set_dispone_file_path(dispone_file)
 
-    #for file in os.listdir(base_dir):
-    #    if file.endswith(".txt"):
-    #        with open(base_dir + "/" + file) as f:
-    #            text = f.read()
-    #            sections = extract_sections_from_text_and_save_to_file(text, file)
-    #            if len(sections) == 3:
-    #                with open(f"{config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"]}/{file}", "w") as output:
-    #                    output.write(sections[0])
-    #                    
-    #                with open(f"{config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"]}/{file}", "w") as output:
-    #                    output.write(sections[1])
-    #
-    #                if last_section == "resuelve":
-    #                    last_section_dir = config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"]
-    #                elif last_section == "dispone":
-    #                    last_section_dir = config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"]
-    #
-    #                with open(f"{last_section_dir}/{file}", "w") as output:
-    #                    output.write(sections[2])
-    #                        
-    #            else:
-    #                failures.append(file)
+        extract_sections_metadata.success(document)
 
 def extract_sections():
     logging.info("Sections Splitter Started")
 
     create_directories()
     do_extract_sections()
-
-    #failures_resuelve = extract_sections_and_write_to_file("resuelve")
-    #failures_dispone = extract_sections_and_write_to_file("dispone")
-
-    #if failures_dispone is not None and failures_resuelve is not None:
-    #    with open(config["EXTRACT_SECTIONS_META_FILE"], 'w') as file:
-    #        file.writelines(str(failures_resuelve))
-    #        file.writelines(str(failures_dispone))

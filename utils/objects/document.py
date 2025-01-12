@@ -41,7 +41,11 @@ class Document:
         self.txt_file_name = None
         self.successful = None
         self.error_type = None
-        
+        self.visto_file_path = None
+        self.considerando_file_path = None
+        self.resolutiva_file_path = None
+        self.resuelve_file_path = None
+        self.dispone_file_path = None
 
     def get_id(self):
         return self.id
@@ -72,6 +76,21 @@ class Document:
     
     def get_text_path(self):
         return self.txt_path
+
+    def set_visto_file_path(self, path):
+        self.visto_file_path = path
+
+    def set_considerando_file_path(self, path):
+        self.considerando_file_path = path
+
+    def set_resolutiva_file_path(self, path):
+        self.resolutiva_file_path = path
+
+    def set_resuelve_file_path(self, path):
+        self.resuelve_file_path = path
+
+    def set_dispone_file_path(self, path):
+        self.dispone_file_path = path
 
     def get_text_content(self):
         if self.txt_path is None:
@@ -119,6 +138,11 @@ class Document:
             "file_name": self.file_name,
             "pdf_path": self.pdf_path,
             "txt_path": self.txt_path,
+            "visto_file_path": self.txt_path,
+            "considerando_file_path": self.txt_path,
+            "resolutiva_file_path": self.txt_path,
+            "dispone_file_path": self.txt_path,
+            "resuelve_file_path": self.txt_path,
             "successful": self.successful,
             "error": self.error_type if self.error_type else None
         }
@@ -130,6 +154,11 @@ class Document:
         document.file_name = json["file_name"]
         document.pdf_path = json["pdf_path"]
         document.txt_path = json["txt_path"]
+        document.visto_file_path = json["visto_file_path"]
+        document.considerando_file_path = json["considerando_file_path"]
+        document.resolutiva_file_path = json["resolutiva_file_path"]
+        document.dispone_file_path = json["dispone_file_path"]
+        document.resuelve_file_path = json["resuelve_file_path"]
         document.successful = json["successful"]
         document.error_type = json["error"] if "error" in json else None
         return document
