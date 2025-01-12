@@ -1,3 +1,10 @@
+import logging
+logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
+
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
+
+import os
 from simple_term_menu import TerminalMenu
 from utils.execution_cleaner import clear_execution_dirs
 from preprocessors.digest_downloader_converter.downloader_converter import download_and_convert
@@ -9,10 +16,6 @@ from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents
 from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
 from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
 import utils.query_executor
-import logging
-import os
-
-logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
