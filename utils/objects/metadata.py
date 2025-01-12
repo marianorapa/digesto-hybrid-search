@@ -20,10 +20,8 @@ class Metadata:
             json.dump(self.metadata, f)
 
     def load(self):
-        if os.path.isfile(self.filepath):
-            with open(self.filepath, 'r') as file:
-                self.metadata = json.load(file)
-        return self
+        with open(self.filepath, 'r') as file:
+            self.metadata = json.load(file)
 
     def get_valid_documents(self) -> List[Document]:
         return [document for document_json in self.metadata.values() if (document := Document.from_json(json=document_json)).is_success()]
