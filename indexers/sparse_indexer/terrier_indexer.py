@@ -1,7 +1,11 @@
 import pyterrier as pt
 import os
 import nltk
+import logging
 
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
+# TODO: Add env variables like previous modules
 BASE_INPUT_DIR = "./collection"
 
 VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/documents"
@@ -26,6 +30,7 @@ COMPLETE_COMPLETE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/completa"
 COMPLETE_RESUELVE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/resuelve"
 COMPLETE_DISPONE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/dispone"
 
+# TODO: Refactor create_directories like previous modules
 def create_directories():
     if not os.path.exists(BASE_OUTPUT_DIR):
         os.mkdir(BASE_OUTPUT_DIR)
@@ -76,6 +81,8 @@ def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
 
 
 def terrier_index():
+    logger.info("Sparse Indexer Started")
+
     if not pt.started():
         pt.init()
 
@@ -91,3 +98,5 @@ def terrier_index():
     index_directory(COMPLETE_COMPLETE_INPUT_DIR, COMPLETE_COMPLETE_OUTPUT_DIR, stopwords)
     index_directory(COMPLETE_RESUELVE_INPUT_DIR, COMPLETE_RESUELVE_OUTPUT_DIR, stopwords)
     index_directory(COMPLETE_DISPONE_INPUT_DIR, COMPLETE_DISPONE_OUTPUT_DIR, stopwords)
+
+    logger.info("Sparse Indexer Ended")

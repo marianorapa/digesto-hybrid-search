@@ -1,3 +1,53 @@
+import logging
+import logging.config
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        },
+        "simple": {
+            "format": "%(levelname)s - %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "default",
+            "stream": "ext://sys.stdout",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "default",
+            "filename": "app.log",
+        },
+    },
+    "loggers": {
+        "": {  # Logger raíz
+            "level": "WARNING",
+            "handlers": ["console", "file"],
+        },
+        "digesto-hybrid-search-logger": {  # Logger personalizado
+            "level": "DEBUG",
+            "handlers": ["console", "file"],
+            "propagate": False,  # Evita que este logger pase los mensajes al logger raíz
+        },
+    },
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
+
+from dotenv import load_dotenv
+load_dotenv(verbose=True)
+
+import os
 from simple_term_menu import TerminalMenu
 from utils.execution_cleaner import clear_execution_dirs
 from preprocessors.digest_downloader_converter.downloader_converter import download_and_convert
@@ -9,13 +59,6 @@ from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents
 from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
 from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
 import utils.query_executor
-import logging
-import os
-
-logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
-
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 
 DOWNLOAD_INDEX_DOCS = 0
 DOWNLOAD_DOCS = 1
@@ -46,7 +89,13 @@ def process_option(menu_entry_index):
     elif menu_entry_index == COMPARE_MODELS:
         compare_models()
     elif menu_entry_index == CLEAR:
-        clear_execution_dirs()
+        confirmation = input(
+            "¿Estás seguro de que querés limpiar el entorno? Esto eliminará archivos. (s/n): ").strip().lower()
+        if confirmation == "s":
+            clear_execution_dirs()
+            print("El entorno ha sido limpiado.")
+        else:
+            print("Operación cancelada.")
 
 def compare_models():
     query = input("Query: ")

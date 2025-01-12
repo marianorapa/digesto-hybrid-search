@@ -4,6 +4,8 @@ import logging
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
 
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
 config = os.environ
 
 downloader_converter_metadata = Metadata(config["DOWNLOADER_CONVERTER_META_FILE"]).load()
@@ -18,20 +20,11 @@ def documents_dir(base_dir: str):
     return base_dir + '/documents'
 
 def create_directories():
-    if not os.path.exists(documents_dir(config["SECTION_VISTO_DIR"])):
-        os.makedirs(documents_dir(config["SECTION_VISTO_DIR"]))
-
-    if not os.path.exists(documents_dir(config["SECTION_CONSIDERANDO_DIR"])):
-        os.makedirs(documents_dir(config["SECTION_CONSIDERANDO_DIR"]))
-
-    if not os.path.exists(documents_dir(config["SECTION_RESUELVE_DIR"])):
-        os.makedirs(documents_dir(config["SECTION_RESUELVE_DIR"]))
-
-    if not os.path.exists(documents_dir(config["SECTION_DISPONE_DIR"])):
-        os.makedirs(documents_dir(config["SECTION_DISPONE_DIR"]))
-    
-    if not os.path.exists(documents_dir(config["SECTION_RESOLUTIVA_DIR"])):
-        os.makedirs(documents_dir(config["SECTION_RESOLUTIVA_DIR"]))
+    os.makedirs(documents_dir(config["SECTION_VISTO_DIR"]), exist_ok = True)
+    os.makedirs(documents_dir(config["SECTION_CONSIDERANDO_DIR"]), exist_ok=True)
+    os.makedirs(documents_dir(config["SECTION_RESOLUTIVA_DIR"]), exist_ok=True)
+    os.makedirs(documents_dir(config["SECTION_RESUELVE_DIR"]), exist_ok=True)
+    os.makedirs(documents_dir(config["SECTION_DISPONE_DIR"]), exist_ok=True)
 
 def extract_sections_from_document(document: Document) -> list[str]:
     text = document.get_text_content()
@@ -99,7 +92,10 @@ def do_extract_sections():
         extract_sections_metadata.success(document)
 
 def extract_sections():
-    logging.info("Sections Splitter Started")
+    logger.info("Sections Splitter Started")
 
     create_directories()
     do_extract_sections()
+
+
+    logger.info("Sections Splitter Ended")

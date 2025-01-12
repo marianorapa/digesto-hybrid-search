@@ -3,7 +3,6 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 import nltk
 import re
-from tqdm import tqdm
 import csv
 import logging
 from utils.file_eraser import erase_file_from_everywhere
@@ -13,6 +12,8 @@ from utils.objects.metadata import Metadata
 config = os.environ
 extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"])
 sentences_metadata = Metadata(config["SENTENCES_META_FILE"])
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
 
 BASE_OUTPUT_DIR = "./collection"
 
@@ -55,7 +56,7 @@ def split_sentences_from_dir(es_tokenizer, dir):
                 sentences = split_sentences_from_text(es_tokenizer, text)
 
                 if len(sentences) <= 0:
-                    logging.error("File without sentences {dir}/{file}")  
+                    logger.error("File without sentences {dir}/{file}")
                     erase_file_from_everywhere(file, "NO_SENTENCES")
                     
                 save_file(sentences_dir + '/' + file, sentences)
@@ -72,7 +73,7 @@ def split_sentences(documents: List[Document]):
         split_sentences(document)
 
 def split_sentences():
-    logging.info("Sentence Splitter Started")
+    logger.info("Sentence Splitter Started")
     nltk.download('punkt')
     es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
 
@@ -83,3 +84,5 @@ def split_sentences():
     split_sentences_from_dir(es_tokenizer, config["SECTION_DISPONE_DIR"])
     split_sentences_from_dir(es_tokenizer, config["SECTION_RESUELVE_DIR"])
     split_sentences_from_dir(es_tokenizer, config["SECTION_RESOLUTIVA_DIR"])
+
+    logger.info("Sentence Splitter Ended")

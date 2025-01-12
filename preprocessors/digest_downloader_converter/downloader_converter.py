@@ -1,4 +1,3 @@
-import re
 import requests
 from tqdm import tqdm
 import os
@@ -7,29 +6,22 @@ import time
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
 
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
 config = os.environ
 metadata = Metadata(config["DOWNLOADER_CONVERTER_META_FILE"])
 
-BASE_COLLECTION_DIR = config["COLLECTION_DIR"]
 RESOLUTION_DIR = config["RESOLUTIONS_DIR"]
 DISPOSITION_DIR = config["DISPOSITIONS_DIR"]
 
-DOWNLOADS_NOT_FOUND = config["DOWNLOADER_CONVERTER_NOT_FOUND_DOCS"]
 RAW_OUTPUT_DIR = config["DOWNLOADER_CONVERTER_RAW_DIR"]
+DOWNLOADS_NOT_FOUND = config["DOWNLOADER_CONVERTER_NOT_FOUND_DOCS"]
 
 
 def create_directories():
-    if not os.path.exists(RAW_OUTPUT_DIR):
-        os.mkdir(RAW_OUTPUT_DIR)
-
-    if not os.path.exists(BASE_COLLECTION_DIR):
-        os.mkdir(BASE_COLLECTION_DIR)
-
-    if not os.path.exists(RESOLUTION_DIR):
-        os.mkdir(RESOLUTION_DIR)
-
-    if not os.path.exists(DISPOSITION_DIR):
-        os.mkdir(DISPOSITION_DIR)
+    os.makedirs(RESOLUTION_DIR, exist_ok = True)
+    os.makedirs(DISPOSITION_DIR, exist_ok = True)
+    os.makedirs(RAW_OUTPUT_DIR, exist_ok=True)
 
 
 def save_parsed_text(parsed_text, document: Document):
@@ -40,7 +32,7 @@ def save_parsed_text(parsed_text, document: Document):
         filepath = DISPOSITION_DIR + "/" + document.get_txt_filename()
 
     if os.path.isfile(filepath):
-        logging.warning(f"{filepath} already exist when trying to save")
+        logger.warning(f"{filepath} already exist when trying to save")
 
     with open(filepath, "w") as file:
         file.write(parsed_text)
@@ -88,19 +80,19 @@ def process_document_from_url(url, index, retry_number=0):
     else:
         retry_number = retry_number + 1
         if retry_number < 5:
-            logging.warning(f"Failed to download {url}. Status code: {response.status_code}, Retrying...")
+            logger.warning(f"Failed to download {url}. Status code: {response.status_code}, Retrying...")
             time.sleep(10)
             process_document_from_url(url, index, retry_number=retry_number)
         else:
-            logging.error(f"Failed to download {url}. Status code: {response.status_code}, Retries exceeded")
+            logger.error(f"Failed to download {url}. Status code: {response.status_code}, Retries exceeded")
 
 
 def save_as_pdf(document: Document):
 
-    filepath = RAW_OUTPUT_DIR + document.cleaned_filename()
+    filepath = f"{RAW_OUTPUT_DIR}/{document.cleaned_filename()}"
 
     if os.path.isfile(filepath):
-        logging.warning(f"{filepath} already exist when trying to save")
+        logger.warning(f"{filepath} already exist when trying to save")
 
     with open(filepath, "wb") as file:
         file.write(document.content_bytes)
@@ -119,13 +111,14 @@ def download_documents(number_of_docs: int):
             process_document_from_url(url, i)
 
         except Exception as e:
-            logging.warning(f"Skipping process of URL {url}. Exception {e}")
+            logger.warning(f"Skipping process of URL {url}. Exception {e}")
             continue
 
     return number_of_docs + 1
 
 
 def download_and_convert(doc_id_to):
-    logging.info("Downloader Converter Started")
+    logger.info("Downloader Converter Started")
     download_documents(doc_id_to)
     metadata.save()
+    logger.info("Downloader Converter Ended")

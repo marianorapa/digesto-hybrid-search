@@ -1,6 +1,8 @@
 from typing import List
 from utils.objects.document import Document
 import json
+import os.path
+
 
 class Metadata:
     def __init__(self, filepath = None):
@@ -20,7 +22,6 @@ class Metadata:
     def load(self):
         with open(self.filepath, 'r') as file:
             self.metadata = json.load(file)
-        return self
 
     def get_valid_documents(self) -> List[Document]:
         return [document for document_json in self.metadata.values() if (document := Document.from_json(json=document_json)).is_success()]
