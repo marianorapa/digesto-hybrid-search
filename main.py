@@ -1,5 +1,48 @@
 import logging
-logging.basicConfig(level=logging.INFO, filename=f"app.log", filemode="w")
+import logging.config
+
+LOGGING_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        },
+        "simple": {
+            "format": "%(levelname)s - %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": "DEBUG",
+            "formatter": "default",
+            "stream": "ext://sys.stdout",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "default",
+            "filename": "app.log",
+        },
+    },
+    "loggers": {
+        "": {  # Logger raíz
+            "level": "WARNING",
+            "handlers": ["console", "file"],
+        },
+        "digesto-hybrid-search-logger": {  # Logger personalizado
+            "level": "DEBUG",
+            "handlers": ["console", "file"],
+            "propagate": False,  # Evita que este logger pase los mensajes al logger raíz
+        },
+    },
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
+
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)

@@ -3,8 +3,8 @@ import os
 import logging
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
-#from tqdm import tqdm
-#from utils.file_eraser import erase_file_from_everywhere
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
 
 config = os.environ
 
@@ -16,17 +16,10 @@ keywords = ["VISTO:", "CONSIDERANDO:"]
 last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
 
 def create_directories():
-    if not os.path.exists(config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"])
-
-    if not os.path.exists(config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"])
-
-    if not os.path.exists(config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"])
-
-    if not os.path.exists(config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"]):
-        os.makedirs(config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"])
+    os.makedirs(config["EXTRACT_SECTION_VISTO_OUTPUT_DIR"], exist_ok = True)
+    os.makedirs(config["EXTRACT_SECTION_CONSIDERANDO_OUTPUT_DIR"], exist_ok=True)
+    os.makedirs(config["EXTRACT_SECTION_RESUELVE_OUTPUT_DIR"], exist_ok=True)
+    os.makedirs(config["EXTRACT_SECTION_DISPONE_OUTPUT_DIR"], exist_ok=True)
 
 def extract_sections_from_document(document: Document) -> list[str]:
     text = document.get_text_content()
@@ -98,7 +91,7 @@ def do_extract_sections():
     #                failures.append(file)
 
 def extract_sections():
-    logging.info("Sections Splitter Started")
+    logger.info("Sections Splitter Started")
 
     create_directories()
     do_extract_sections()

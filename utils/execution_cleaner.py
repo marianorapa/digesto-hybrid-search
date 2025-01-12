@@ -16,6 +16,8 @@ def clear_execution_dirs():
     remove_whatever("./preprocessors/digest_downloader_converter/downloads-progress.txt")
     remove_whatever("./preprocessors/digest_downloader_converter/downloads-not-founds.txt")
     remove_whatever("deleted-files.txt")
+    remove_whatever("downloads-empty.txt")
+    remove_whatever("downloads-meta.txt")
 
     remove_whatever("collection")
     remove_whatever("indexes")
