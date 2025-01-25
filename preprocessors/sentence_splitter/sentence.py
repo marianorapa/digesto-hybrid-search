@@ -10,20 +10,19 @@ from utils.objects.document import Document
 from utils.objects.metadata import Metadata
 
 config = os.environ
-extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"])
-sentences_metadata = Metadata(config["SENTENCES_META_FILE"])
+extract_sections_metadata = None
+sentences_metadata = None
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
 
-BASE_OUTPUT_DIR = "./collection"
+nltk.download('punkt')
+es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
 
-COMPLETA_RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/completa/resuelve"
-COMPLETA_DISPONE_DIR = f"{BASE_OUTPUT_DIR}/completa/dispone"
+def init_metadata():
+    global extract_sections_metadata, sentences_metadata
+    extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"]).load()
+    sentences_metadata = Metadata(config["SENTENCES_META_FILE"])
 
-VISTO_DIR = f"{BASE_OUTPUT_DIR}/visto"
-CONSIDERANDO_DIR = f"{BASE_OUTPUT_DIR}/considerando"
-RESUELVE_DIR = f"{BASE_OUTPUT_DIR}/resuelve"
-DISPONE_DIR = f"{BASE_OUTPUT_DIR}/dispone"
 
 def split_sentences_from_text(es_tokenizer, text):
     text = re.sub(r'\s+', ' ', text)
@@ -44,14 +43,14 @@ def documents_dir(base_dir: str):
     return base_dir + '/documents'
 
 def split_sentences_from_dir(es_tokenizer, dir):
-    sentences_dir = sentences_dir(dir)
-    if not os.path.exists(sentences_dir):
-        os.mkdir(sentences_dir)
+    sentences_directory = sentences_dir(dir)
+    if not os.path.exists(sentences_directory):
+        os.mkdir(sentences_directory)
     
-    documents_dir = documents_dir(dir)
-    for file in os.listdir(documents_dir):
+    documents_directory = documents_dir(dir)
+    for file in os.listdir(documents_directory):
         if file.endswith('.txt'):
-            with open(documents_dir + '/' + file, 'r') as f:
+            with open(documents_directory + '/' + file, 'r') as f:
                 text = f.read()
                 sentences = split_sentences_from_text(es_tokenizer, text)
 
@@ -59,25 +58,28 @@ def split_sentences_from_dir(es_tokenizer, dir):
                     logger.error("File without sentences {dir}/{file}")
                     erase_file_from_everywhere(file, "NO_SENTENCES")
                     
-                save_file(sentences_dir + '/' + file, sentences)
+                save_file(sentences_directory + '/' + file, sentences)
 
-def split_sentences(doc: Document):
-    sentences = doc.get_text_content()
+def split_sentences_from_doc(doc: Document):
+    
+    sentences = split_sentences_from_text(es_tokenizer, doc.get_text_content())
     if len(sentences) <= 0:
         logging.error("File without sentences {dir}/{file}")
         sentences_metadata.error()
-    
+    else:
+        save_file(sentences_dir(doc.get_directory()) + '/' + doc.get_file_name(), sentences)
+        sentences_metadata.success()
 
-def split_sentences(documents: List[Document]):
+def split_sentences_from_doc_list(documents: List[Document]):
     for document in documents:
-        split_sentences(document)
+        split_sentences_from_doc(document)
 
 def split_sentences():
     logger.info("Sentence Splitter Started")
-    nltk.download('punkt')
-    es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
-
-    split_sentences(extract_sections_metadata.get_valid_documents())
+    
+    init_metadata()
+    valid_docs = extract_sections_metadata.get_valid_documents()    
+    split_sentences_from_doc_list(valid_docs)
 
     split_sentences_from_dir(es_tokenizer, config["SECTION_VISTO_DIR"])
     split_sentences_from_dir(es_tokenizer, config["SECTION_CONSIDERANDO_DIR"])
@@ -85,4 +87,5 @@ def split_sentences():
     split_sentences_from_dir(es_tokenizer, config["SECTION_RESUELVE_DIR"])
     split_sentences_from_dir(es_tokenizer, config["SECTION_RESOLUTIVA_DIR"])
 
+    sentences_metadata.save()
     logger.info("Sentence Splitter Ended")
