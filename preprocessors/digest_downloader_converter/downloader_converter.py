@@ -27,9 +27,9 @@ def create_directories():
 def save_parsed_text(parsed_text, document: Document):
     filepath = ""
     if document.is_resolution():
-        filepath = RESOLUTION_DIR + "/" + document.get_txt_filename()
+        filepath = RESOLUTION_DIR + "/" + document.get_doc_id() + ".txt"
     elif document.is_disposition():
-        filepath = DISPOSITION_DIR + "/" + document.get_txt_filename()
+        filepath = DISPOSITION_DIR + "/" + document.get_doc_id() + ".txt"
 
     if os.path.isfile(filepath):
         logger.warning(f"{filepath} already exist when trying to save")

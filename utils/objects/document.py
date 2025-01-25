@@ -2,6 +2,7 @@ from utils.url_finder import get_filename_from_url
 import urllib
 from pypdf import PdfReader
 import re
+import json
 
 def file_was_downloaded(doc_url):
     return get_filename_from_url(doc_url) != None
@@ -54,6 +55,9 @@ class Document:
 
     def get_id(self):
         return self.id
+    
+    def get_doc_id(self) -> str:
+        return f"doc_{str(self.id)}"
 
     def set_id(self, id):
         self.id = id
@@ -153,23 +157,42 @@ class Document:
     def is_disposition(self):
         return self.cleaned_filename().startswith("DISP")
 
-    def get_visto_sentences(self, tokenizer):
+    def create_visto_sentences(self, tokenizer):
         return self.split_sentences_from_text(self.read_file(self.visto_file_path), tokenizer)
 
-    def get_considerando_sentences(self, tokenizer):
+    def get_visto_sentences(self):
+        with open(self.visto_sentences_path, mode="r", encoding="utf-8") as file:
+            return json.load(file)
+    
+    def create_considerando_sentences(self, tokenizer):
         return self.split_sentences_from_text(self.read_file(self.considerando_file_path), tokenizer)
     
-    def get_resolutiva_sentences(self, tokenizer):
+    def get_considerando_sentences(self):
+        with open(self.considerando_sentences_path, mode="r", encoding="utf-8") as file:
+            return json.load(file)
+    
+    def create_resolutiva_sentences(self, tokenizer):
         return self.split_sentences_from_text(self.read_file(self.resolutiva_file_path), tokenizer)
     
-    def get_resuelve_sentences(self, tokenizer):
+    def get_resolutiva_sentences(self):
+        with open(self.resolutiva_sentences_path, mode="r", encoding="utf-8") as file:
+            return json.load(file)
+    
+    def create_resuelve_sentences(self, tokenizer):
         if self.resuelve_file_path != None:
             return self.split_sentences_from_text(self.read_file(self.resuelve_file_path), tokenizer)
-        
+
+    def get_resuelve_sentences(self):
+        with open(self.resuelve_sentences_path, mode="r", encoding="utf-8") as file:
+            return json.load(file)
     
-    def get_dispone_sentences(self, tokenizer):
+    def create_dispone_sentences(self, tokenizer):
         if self.dispone_file_path != None:
             return self.split_sentences_from_text(self.read_file(self.dispone_file_path), tokenizer)
+    
+    def get_dispone_sentences(self):
+        with open(self.dispone_sentences_path, mode="r", encoding="utf-8") as file:
+            return json.load(file)
     
     def split_sentences_from_text(self, text, tokenizer):
         text = re.sub(r'\s+', ' ', text)

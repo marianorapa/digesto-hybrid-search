@@ -8,6 +8,7 @@ import logging
 from utils.file_eraser import erase_file_from_everywhere
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
+import json
 
 config = os.environ
 extract_sections_metadata = None
@@ -35,12 +36,11 @@ def split_sentences_from_text(es_tokenizer, text):
     text = text.replace('º.-', ':').replace('.-', '.')
     return es_tokenizer.tokenize(text)
 
-def save_file(filename, sentences):
-    file = filename.replace('.pdf', '.csv')
-    with open(file, 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(sentences)
-    return file
+def save_file(output_dir, doc_id, sentences):
+    filename = doc_id + ".json"
+    with open(output_dir + "/" + filename, mode="w", encoding="utf-8") as file:
+        json.dump(sentences, file, indent=4, ensure_ascii=False)
+    return filename
 
 def sentences_dir(base_dir: str):
     return base_dir + '/sentences'
@@ -50,29 +50,29 @@ def documents_dir(base_dir: str):
 
 def save_sentences(document: Document, sentences, section_dir):
     if len(sentences) <= 0:
-        logging.error(f"File without sentences {section_dir}/{document.cleaned_filename()}")
+        logging.error(f"File without sentences {section_dir}/{document.get_doc_id()}")
         raise ValueError("File without sentences")
     else:
         section_sentences_dir = sentences_dir(section_dir)
-        return save_file(section_sentences_dir + "/" + document.cleaned_filename(), sentences)
+        return save_file(section_sentences_dir, document.get_doc_id(), sentences)
 
 def split_sentences_from_doc(doc: Document):
     try:
-        path = save_sentences(doc, doc.get_visto_sentences(es_tokenizer), config["SECTION_VISTO_DIR"])
+        path = save_sentences(doc, doc.create_visto_sentences(es_tokenizer), config["SECTION_VISTO_DIR"])
         doc.set_visto_sentences_path(path)
 
-        path = save_sentences(doc, doc.get_considerando_sentences(es_tokenizer), config["SECTION_CONSIDERANDO_DIR"])
+        path = save_sentences(doc, doc.create_considerando_sentences(es_tokenizer), config["SECTION_CONSIDERANDO_DIR"])
         doc.set_considerando_sentences_path(path)
 
-        path = save_sentences(doc, doc.get_resolutiva_sentences(es_tokenizer), config["SECTION_RESOLUTIVA_DIR"])
+        path = save_sentences(doc, doc.create_resolutiva_sentences(es_tokenizer), config["SECTION_RESOLUTIVA_DIR"])
         doc.set_resolutiva_sentences_path(path)
         
         if doc.is_resolution():
-            path = save_sentences(doc, doc.get_resuelve_sentences(es_tokenizer), config["SECTION_RESUELVE_DIR"])
+            path = save_sentences(doc, doc.create_resuelve_sentences(es_tokenizer), config["SECTION_RESUELVE_DIR"])
             doc.set_resuelve_sentences_path(path)
         
         if doc.is_disposition():
-            path = save_sentences(doc, doc.get_dispone_sentences(es_tokenizer), config["SECTION_DISPONE_DIR"])
+            path = save_sentences(doc, doc.create_dispone_sentences(es_tokenizer), config["SECTION_DISPONE_DIR"])
             doc.set_dispone_sentences_path(path)
 
         sentences_metadata.success(doc)

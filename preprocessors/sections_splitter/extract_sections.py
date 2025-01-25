@@ -53,7 +53,7 @@ def extract_sections_from_document(document: Document) -> list[str]:
 
 def save_section(document: Document, section_text: str, output_dir: str):
     try:
-        output_file = f"{output_dir}/{document.get_txt_filename()}"
+        output_file = f"{output_dir}/{document.get_doc_id()}.txt"
         with open(output_file, "w") as output:
             output.write(section_text)
         return output_file
