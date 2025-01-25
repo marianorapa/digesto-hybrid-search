@@ -46,12 +46,20 @@ class Document:
         self.resolutiva_file_path = None
         self.resuelve_file_path = None
         self.dispone_file_path = None
+        self.visto_sentences_path = None
+        self.considerando_sentences_path = None
+        self.resolutiva_sentences_path = None
+        self.dispone_sentences_path = None
+        self.resuelve_sentences_path = None
 
     def get_id(self):
         return self.id
 
     def set_id(self, id):
         self.id = id
+
+    def get_file_name(self):
+        return self.file_name
 
     def set_id_from_url(self, url):
         self.id = int(url.split("cod=")[-1])
@@ -92,6 +100,21 @@ class Document:
     def set_dispone_file_path(self, path):
         self.dispone_file_path = path
 
+    def set_visto_sentences_path(self, path):
+        self.visto_sentences_path = path
+
+    def set_considerando_sentences_path(self, path):
+        self.considerando_sentences_path = path
+    
+    def set_resolutiva_sentences_path(self, path):
+        self.resolutiva_sentences_path = path
+
+    def set_dispone_sentences_path(self, path):
+        self.dispone_sentences_path = path
+
+    def set_resuelve_sentences_path(self, path):
+        self.resuelve_sentences_path = path
+
     def get_text_content(self):
         if self.txt_path is None:
             reader = PdfReader(self.pdf_path)
@@ -100,8 +123,7 @@ class Document:
                 text += page.extract_text()
             return self.remove_exp_fragment(text)
         else:
-            with open(self.txt_path, 'r') as file:
-                return file.read().strip()
+            return self.read_file(self.txt_path)
     
     def remove_exp_fragment(self, text):
         # Define the regular expression pattern to match the fragment
@@ -130,7 +152,34 @@ class Document:
     
     def is_disposition(self):
         return self.cleaned_filename().startswith("DISP")
+
+    def get_visto_sentences(self, tokenizer):
+        return self.split_sentences_from_text(self.read_file(self.visto_file_path), tokenizer)
+
+    def get_considerando_sentences(self, tokenizer):
+        return self.split_sentences_from_text(self.read_file(self.considerando_file_path), tokenizer)
     
+    def get_resolutiva_sentences(self, tokenizer):
+        return self.split_sentences_from_text(self.read_file(self.resolutiva_file_path), tokenizer)
+    
+    def get_resuelve_sentences(self, tokenizer):
+        if self.resuelve_file_path != None:
+            return self.split_sentences_from_text(self.read_file(self.resuelve_file_path), tokenizer)
+        
+    
+    def get_dispone_sentences(self, tokenizer):
+        if self.dispone_file_path != None:
+            return self.split_sentences_from_text(self.read_file(self.dispone_file_path), tokenizer)
+    
+    def split_sentences_from_text(self, text, tokenizer):
+        text = re.sub(r'\s+', ' ', text)
+        text = text.replace('º.-', ':').replace('.-', '.')
+        return tokenizer.tokenize(text)
+    
+    def read_file(self, file_path):
+        with open(file_path, 'r') as file:
+            return file.read().strip()
+
     def to_json(self):
         return {
             "id": self.id,
@@ -138,11 +187,16 @@ class Document:
             "file_name": self.file_name,
             "pdf_path": self.pdf_path,
             "txt_path": self.txt_path,
-            "visto_file_path": self.txt_path,
-            "considerando_file_path": self.txt_path,
-            "resolutiva_file_path": self.txt_path,
-            "dispone_file_path": self.txt_path,
-            "resuelve_file_path": self.txt_path,
+            "visto_file_path": self.visto_file_path,
+            "considerando_file_path": self.considerando_file_path,
+            "resolutiva_file_path": self.resolutiva_file_path,
+            "dispone_file_path": self.dispone_file_path,
+            "resuelve_file_path": self.resuelve_file_path,
+            "visto_sentences_path": self.visto_sentences_path,
+            "considerando_sentences_path": self.considerando_sentences_path,
+            "resolutiva_sentences_path": self.resolutiva_sentences_path,
+            "dispone_sentences_path": self.dispone_sentences_path,
+            "resuelve_sentences_path": self.resuelve_sentences_path,
             "successful": self.successful,
             "error": self.error_type if self.error_type else None
         }
@@ -159,6 +213,11 @@ class Document:
         document.resolutiva_file_path = json["resolutiva_file_path"]
         document.dispone_file_path = json["dispone_file_path"]
         document.resuelve_file_path = json["resuelve_file_path"]
+        document.visto_sentences_path = json["visto_sentences_path"]
+        document.considerando_sentences_path = json["considerando_sentences_path"]
+        document.resolutiva_sentences_path = json["resolutiva_sentences_path"]
+        document.dispone_sentences_path = json["dispone_sentences_path"]
+        document.resuelve_sentences_path = json["resuelve_sentences_path"]
         document.successful = json["successful"]
         document.error_type = json["error"] if "error" in json else None
         return document
