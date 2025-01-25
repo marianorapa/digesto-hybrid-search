@@ -8,13 +8,17 @@ logger = logging.getLogger("digesto-hybrid-search-logger")
 
 config = os.environ
 
-downloader_converter_metadata = Metadata(config["DOWNLOADER_CONVERTER_META_FILE"]).load()
-extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"])
+downloader_converter_metadata = None
+extract_sections_metadata = None
 
 # Define the k
 keywords = ["VISTO:", "CONSIDERANDO:"]
 last_key = ["R E S U E L V E", "D I S P O N E", "RESUELVE", "DISPONE"]
 
+def init_metadata():
+    global downloader_converter_metadata, extract_sections_metadata
+    downloader_converter_metadata = Metadata(config["DOWNLOADER_CONVERTER_META_FILE"]).load()
+    extract_sections_metadata = Metadata(config["EXTRACT_SECTIONS_META_FILE"])
 
 def documents_dir(base_dir: str):
     return base_dir + '/documents'
@@ -95,7 +99,8 @@ def extract_sections():
     logger.info("Sections Splitter Started")
 
     create_directories()
+    init_metadata()
     do_extract_sections()
-
+    extract_sections_metadata.save()
 
     logger.info("Sections Splitter Ended")
