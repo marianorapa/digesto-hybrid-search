@@ -1,14 +1,12 @@
-import os
-from typing import List
-from sentence_transformers import SentenceTransformer
-import nltk
-import re
-import csv
-import logging
-from utils.file_eraser import erase_file_from_everywhere
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
+from typing import List
+from tqdm import tqdm
+import logging
 import json
+import nltk
+import os
+import re
 
 config = os.environ
 extract_sections_metadata = None
@@ -38,9 +36,10 @@ def split_sentences_from_text(es_tokenizer, text):
 
 def save_file(output_dir, doc_id, sentences):
     filename = doc_id + ".json"
-    with open(output_dir + "/" + filename, mode="w", encoding="utf-8") as file:
+    filepath = output_dir + "/" + filename
+    with open(filepath, mode="w", encoding="utf-8") as file:
         json.dump(sentences, file, indent=4, ensure_ascii=False)
-    return filename
+    return filepath
 
 def sentences_dir(base_dir: str):
     return base_dir + '/sentences'
@@ -81,7 +80,7 @@ def split_sentences_from_doc(doc: Document):
 
 
 def split_sentences_from_doc_list(documents: List[Document]):
-    for document in documents:
+    for document in tqdm(documents, desc="Extrayendo sentencias de los documentos", unit="doc"):
         split_sentences_from_doc(document)
 
 def split_sentences():

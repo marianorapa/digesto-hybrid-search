@@ -1,189 +1,114 @@
-import os
 from sentence_transformers import SentenceTransformer
-import logging
-import csv
+from utils.objects.metadata import Metadata
+from utils.objects.document import Document
+from typing import List
 from tqdm import tqdm
 import numpy as np
+import logging
 import os.path
-from utils.file_eraser import erase_file_from_everywhere
 import faiss
 import json
+import os
+
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
 
-# TODO: Add env variables like previous modules
-BASE_INPUT_DIR = "./collection"
-VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/sentences"
-CONSIDERANDO_INPUT_DIR = f"{BASE_INPUT_DIR}/considerando/sentences"
-RESUELVE_INPUT_DIR = f"{BASE_INPUT_DIR}/resuelve/sentences"
-DISPONE_INPUT_DIR = f"{BASE_INPUT_DIR}/dispone/sentences"
+config = os.environ
 
-BASE_OUTPUT_DIR = "./indexes"
-DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index"
+def init_metadata():
+    global sentences_metadata, embeddings_generator_metadata
+    sentences_metadata = Metadata(config["SENTENCES_META_FILE"]).load()
+    embeddings_generator_metadata = Metadata(config["EMBEDDINGS_GENERATOR_META_FILE"])
 
-VISTO_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/visto"
-CONSIDERANDO_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/considerando"
-RESUELVE_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/resuelve"
-DISPONE_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/dispone"
-
-COMPLETE_DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index/completa"
-COMPLETE_COMPLETE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/completa"
-COMPLETE_RESUELVE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/resuelve"
-COMPLETE_DISPONE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/dispone"
-
-# TODO: Refactor create_directories like previous modules
 def create_directories():
-    if not os.path.exists(BASE_OUTPUT_DIR):
-        os.mkdir(BASE_OUTPUT_DIR)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_VISTO_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_CONSIDERANDO_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_RESUELVE_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_DISPONE_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR"], exist_ok=True)
+    os.makedirs(config["EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR"], exist_ok=True)
 
-    if not os.path.exists(DENSE_OUTPUT_DIR):
-        os.mkdir(DENSE_OUTPUT_DIR)
-
-    if not os.path.exists(VISTO_OUTPUT_DIR):
-        os.mkdir(VISTO_OUTPUT_DIR)
-
-    if not os.path.exists(CONSIDERANDO_OUTPUT_DIR):
-        os.mkdir(CONSIDERANDO_OUTPUT_DIR)
-
-    if not os.path.exists(RESUELVE_OUTPUT_DIR):
-        os.mkdir(RESUELVE_OUTPUT_DIR)
-
-    if not os.path.exists(DISPONE_OUTPUT_DIR):
-        os.mkdir(DISPONE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_DENSE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_DENSE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_RESUELVE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_RESUELVE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_DISPONE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_DISPONE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_COMPLETE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_COMPLETE_OUTPUT_DIR)
-
-        
-
-def add_to_dense_index(dense_indexes, embedding, document_type, filename):
+# TODO: Changed filename to ID (Fix in next steps)
+# TODO: Should we normalize the vector?
+def add_to_dense_index(dense_indexes, embedding, document_type, doc_id):
     dense_indexes[document_type]["index"].add(embedding.reshape(1, -1))
     counter = dense_indexes[document_type]["counter"]
     dense_indexes[document_type]["counter"] = dense_indexes[document_type]["counter"] + 1
-    dense_indexes[document_type]["metadata"][counter] = filename
+    dense_indexes[document_type]["metadata"][counter] = doc_id
 
-def create_embedding(model, sentence):
-    return model.encode(sentence)
+def generate_embedding_of_sentences(model, sentences):
+    embeddings_of_sentences = []
+    for sentence in sentences:
+        embedding = model.encode(sentence)
+        embeddings_of_sentences.append(embedding)
 
-def get_mean_of_embeddings_and_save(sentence_embeddings, OUTPUT_DIR, FILE):
-    if len(sentence_embeddings) == 0:
-        logger.error(f"{FILE} without sentence embeddings in {OUTPUT_DIR}")
-        return
-    elif len(sentence_embeddings) == 1:
-        embedding = sentence_embeddings[0]
-    else:
-        embedding = np.mean(sentence_embeddings, axis=0)
+    return np.mean(embeddings_of_sentences, axis=0)
 
-    filename = FILE.replace(".csv", ".txt")
-    np.savetxt(f"{OUTPUT_DIR}/{filename}", embedding)
+def generate_embeddings_from_doc_list(model, documents: List[Document], dense_indexes):
+    for document in tqdm(documents, desc="Construyendo embeddings de los documentos", unit="doc"):
+        document_embeddings = []
 
-    return embedding
-
-def generate_section_embedding(model, INPUT_DIR, OUTPUT_DIR):
-    for file in os.listdir(INPUT_DIR):
-        if file.endswith(".csv"):
-
-            # Me fijo si no hay un embedding ya generado
-            if not os.path.exists(f"{OUTPUT_DIR}/{file.replace('.csv', '.txt')}"):
-                sentence_embeddings = []
-                with open(INPUT_DIR + "/" + file) as f:
-                    reader = csv.reader(f)
-                    for row in reader:
-                        for sentence in row:
-                            sentence_embeddings.append(create_embedding(model, sentence))
-
-                    embedding = get_mean_of_embeddings_and_save(sentence_embeddings, OUTPUT_DIR, file)
+        visto_embedding = generate_embedding_of_sentences(model, document.get_visto_sentences())
+        document_embeddings.append(visto_embedding)
+        # Save it in a list, to build document embedding
+        # Save it to dense index
+        add_to_dense_index(dense_indexes, visto_embedding, "visto", document.get_id())
+        # Save it to file, for hybrid legacy implementation
+        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_VISTO_DIR']}/{document.get_id()}", visto_embedding)
 
 
-def generate_sections_embeddings(model):
-    generate_section_embedding(model, VISTO_INPUT_DIR, VISTO_OUTPUT_DIR)
-    generate_section_embedding(model, CONSIDERANDO_INPUT_DIR, CONSIDERANDO_OUTPUT_DIR)
-    generate_section_embedding(model, RESUELVE_INPUT_DIR, RESUELVE_OUTPUT_DIR)
-    generate_section_embedding(model, DISPONE_INPUT_DIR, DISPONE_OUTPUT_DIR)
+        considerando_embedding = generate_embedding_of_sentences(model, document.get_considerando_sentences())
+        # Save it in a list, to build document embedding
+        document_embeddings.append(considerando_embedding)
+        # Save it to dense index
+        add_to_dense_index(dense_indexes, considerando_embedding, "considerando", document.get_id())
+        # Save it to file, for hybrid legacy implementation
+        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_CONSIDERANDO_DIR']}/{document.get_id()}", considerando_embedding)
 
+        resolutiva_embedding = generate_embedding_of_sentences(model, document.get_resolutiva_sentences())
+        # Do not save it to document embeddings
+        # Save it to dense index
+        add_to_dense_index(dense_indexes, resolutiva_embedding, "resolutiva", document.get_id())
+        # Save it to file, for hybrid legacy implementation
+        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR']}/{document.get_id()}", resolutiva_embedding)
+        
+        if document.is_resolution():
+            resuelve_embedding = generate_embedding_of_sentences(model, document.get_resuelve_sentences())
+            # Save it in a list, to build document embedding
+            document_embeddings.append(resuelve_embedding)
+            # Save it to dense index
+            add_to_dense_index(dense_indexes, resuelve_embedding, "resuelve", document.get_id())
+            # Save it to file, for hybrid legacy implementation
+            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_RESUELVE_DIR']}/{document.get_id()}", resuelve_embedding)
 
-def mean_sections_embeddings(filename, dense_indexes):
-    embeddings = []
-    section_embeddings = {}
+            # Build document embedding
+            document_embedding = np.mean(document_embeddings, axis=0)
+            add_to_dense_index(dense_indexes, document_embedding, "resoluciones", document.get_id())
+            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR']}/{document.get_id()}", document_embedding)
+        
+        if document.is_disposition():
+            dispone_embedding = generate_embedding_of_sentences(model, document.get_dispone_sentences())
+            # Save it in a list, to build document embedding
+            document_embeddings.append(dispone_embedding)
+            # Save it to dense index
+            add_to_dense_index(dense_indexes, dispone_embedding, "dispone", document.get_id())
+            # Save it to file, for hybrid legacy implementation
+            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_DISPONE_DIR']}/{document.get_id()}", dispone_embedding)
 
-    if os.path.exists(f"{VISTO_OUTPUT_DIR}/{filename}"):
-        with open(f"{VISTO_OUTPUT_DIR}/{filename}", "r") as f:
-            #embeddings.append(np.loadtxt(f"{VISTO_OUTPUT_DIR}/{filename}"))
-            section_embeddings["visto"] = np.loadtxt(f"{VISTO_OUTPUT_DIR}/{filename}")
-    else:
-        logger.error(f"File not exist {VISTO_OUTPUT_DIR}/{filename}")
+            # Build document embedding
+            document_embedding = np.mean(document_embeddings, axis=0)
+            add_to_dense_index(dense_indexes, document_embedding, "disposiciones", document.get_id())
+            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR']}/{document.get_id()}", document_embedding)
 
-    if os.path.exists(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}"):
-        with open(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}", "r") as f:
-            #embeddings.append(np.loadtxt(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}"))
-            section_embeddings["considerando"] = np.loadtxt(f"{CONSIDERANDO_OUTPUT_DIR}/{filename}")
-    else:
-        logger.error(f"File not exist {CONSIDERANDO_OUTPUT_DIR}/{filename}")
-
-    if os.path.exists(f"{RESUELVE_OUTPUT_DIR}/{filename}") or os.path.exists(f"{DISPONE_OUTPUT_DIR}/{filename}"):
-        if os.path.exists(f"{RESUELVE_OUTPUT_DIR}/{filename}"):
-            with open(f"{RESUELVE_OUTPUT_DIR}/{filename}", "r") as f:
-                #embeddings.append(np.loadtxt(f"{RESUELVE_OUTPUT_DIR}/{filename}"))
-                section_embeddings["resuelve"] = np.loadtxt(f"{RESUELVE_OUTPUT_DIR}/{filename}")
-        else:
-            with open(f"{DISPONE_OUTPUT_DIR}/{filename}", "r") as f:
-                #embeddings.append(np.loadtxt(f"{DISPONE_OUTPUT_DIR}/{filename}"))
-                section_embeddings["dispone"] = np.loadtxt(f"{DISPONE_OUTPUT_DIR}/{filename}")
-    else:
-        logger.error(f"File not exist {RESUELVE_OUTPUT_DIR}/{filename} or {DISPONE_OUTPUT_DIR}/{filename}")
-
-   #if len(embeddings) == 3:
-    if len(section_embeddings.keys()) == 3: 
-        #document_embedding = np.mean(embeddings, axis=0)
-        document_embedding = np.mean(list(section_embeddings.values()), axis=0)
-
-        for section in section_embeddings:
-            add_to_dense_index(dense_indexes, section_embeddings[section], section, filename)
-
-        if filename.startswith("RES"):
-            np.savetxt(f"{COMPLETE_RESUELVE_OUTPUT_DIR}/{filename}", document_embedding)
-            add_to_dense_index(dense_indexes, document_embedding, "resoluciones", filename)
-            add_to_dense_index(dense_indexes, document_embedding, "completo", filename)
-        elif filename.startswith("DISP"):
-            np.savetxt(f"{COMPLETE_DISPONE_OUTPUT_DIR}/{filename}", document_embedding)
-            add_to_dense_index(dense_indexes, document_embedding, "disposiciones", filename)
-            add_to_dense_index(dense_indexes, document_embedding, "completo", filename)
-        else:
-            logger.error(f"File not exist {COMPLETE_RESUELVE_OUTPUT_DIR}/{filename} or {COMPLETE_DISPONE_OUTPUT_DIR}/{filename}")
-    else:
-        logger.error(f"Couldnt find all embedings for file {filename}")
-        erase_file_from_everywhere(filename, "MISSING_EMBEDDINGS")
-
-
-def generate_documents_embeddings(dense_indexes):
-    deleted_files = []
-    try: 
-        with open("./deleted-files.txt", "r") as deleted:
-            for line in deleted.readlines():
-                filename = line.split(",")[0]
-                deleted_files.append(filename)
-    except FileNotFoundError: 
-        logger.info("No deleted-files.txt file found")
-
-    with open("./preprocessors/digest_downloader_converter/downloads-meta.txt") as f:
-        for line in f.readlines():
-            filename = line.split(",")[0].replace("pdf", "txt")
-            if (filename not in deleted_files):
-                mean_sections_embeddings(filename, dense_indexes)
+        add_to_dense_index(dense_indexes, document_embedding, "completo", document.get_id())
+        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']}/{document.get_id()}", document_embedding)
 
 def create_dense_indexes_structure():
     dense_indexes = {}
 
-    for key in ["visto", "considerando", "resuelve", "dispone", "resoluciones", "disposiciones", "completo"]:
+    for key in ["visto", "considerando", "resuelve", "dispone", "resoluciones", "disposiciones", "completo", "resolutiva"]:
         dense_indexes[key] = {}
         dense_indexes[key]["index"] = faiss.IndexFlatL2(768)
         dense_indexes[key]["counter"] = 0
@@ -191,25 +116,25 @@ def create_dense_indexes_structure():
 
     return dense_indexes
 
+# Para chusmear la semana que viene: No sé por que están los output dir acá
 def persist_dense_indexes(dense_indexes):
-     print(dense_indexes)
-
      for key in dense_indexes:
-
         if key == "visto":
-            root_directory = VISTO_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_VISTO_DIR']
         elif key == "considerando":
-            root_directory = CONSIDERANDO_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_CONSIDERANDO_DIR']
         elif key == "resuelve":
-            root_directory = RESUELVE_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_RESUELVE_DIR']
         elif key == "dispone":
-            root_directory = DISPONE_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_DISPONE_DIR']
         elif key == "resoluciones":
-            root_directory = COMPLETE_RESUELVE_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR']
         elif key == "disposiciones":
-            root_directory = COMPLETE_DISPONE_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR']
         elif key == "completo":
-            root_directory = COMPLETE_COMPLETE_OUTPUT_DIR
+            root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']
+        elif key == "resolutiva":
+            root_directory = config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR']
 
         index = dense_indexes[key]["index"]
         faiss.write_index(index, f"{root_directory}/index_{key}.bin")
@@ -225,13 +150,13 @@ def generate_embeddings():
 
     model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
 
-    generate_sections_embeddings(model)
+    init_metadata()
 
     dense_indexes = create_dense_indexes_structure()
 
-    generate_documents_embeddings(dense_indexes)
+    valid_docs = sentences_metadata.get_valid_documents()
 
-    persist_dense_indexes(dense_indexes)
+    generate_embeddings_from_doc_list(model, valid_docs, dense_indexes)
 
     logger.info("Dense Indexer Ended")
 

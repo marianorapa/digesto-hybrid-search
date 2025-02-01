@@ -46,8 +46,6 @@ logger = logging.getLogger("digesto-hybrid-search-logger")
 
 from dotenv import load_dotenv
 load_dotenv(verbose=True)
-
-import os
 from simple_term_menu import TerminalMenu
 from utils.execution_cleaner import clear_execution_dirs
 from preprocessors.digest_downloader_converter.downloader_converter import download_and_convert
@@ -160,7 +158,7 @@ def do_retrieve(retriever, collection):
     input("Enter para continuar")
 
 def menu():
-    options = ["Descargar, preprocesar e indexar", "Descargar documentos y preprocesar", "Indexar (sparse & dense)", "Recuperar", "Comparar modelos", "Limpiar Entorno", "Salir"]
+    options = ["Descargar, preprocesar e indexar", "Descargar y preprocesar", "Indexar (sparse & dense)", "Recuperar", "Comparar modelos", "Limpiar Entorno", "Salir"]
     terminal_menu = TerminalMenu(options)
     menu_entry_index = -1
     while menu_entry_index != EXIT:

@@ -1,67 +1,21 @@
 import pyterrier as pt
-import os
-import nltk
 import logging
+import nltk
+import os
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
 
-# TODO: Add env variables like previous modules
-BASE_INPUT_DIR = "./collection"
+config = os.environ
 
-VISTO_INPUT_DIR = f"{BASE_INPUT_DIR}/visto/documents"
-CONSIDERANDO_INPUT_DIR = f"{BASE_INPUT_DIR}/considerando/documents"
-RESUELVE_INPUT_DIR = f"{BASE_INPUT_DIR}/resuelve/documents"
-DISPONE_INPUT_DIR = f"{BASE_INPUT_DIR}/dispone/documents"
-
-COMPLETE_COMPLETE_INPUT_DIR = f"{BASE_INPUT_DIR}/completa"
-COMPLETE_RESUELVE_INPUT_DIR = f"{BASE_INPUT_DIR}/completa/resuelve"
-COMPLETE_DISPONE_INPUT_DIR = f"{BASE_INPUT_DIR}/completa/dispone"
-
-BASE_OUTPUT_DIR = "./indexes"
-SPARSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/sparse_index"
-
-VISTO_OUTPUT_DIR = f"{SPARSE_OUTPUT_DIR}/visto"
-CONSIDERANDO_OUTPUT_DIR = f"{SPARSE_OUTPUT_DIR}/considerando"
-RESUELVE_OUTPUT_DIR = f"{SPARSE_OUTPUT_DIR}/resuelve"
-DISPONE_OUTPUT_DIR = f"{SPARSE_OUTPUT_DIR}/dispone"
-
-COMPLETE_BASE_OUTPUT_DIR = f"{SPARSE_OUTPUT_DIR}/completa"
-COMPLETE_COMPLETE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/completa"
-COMPLETE_RESUELVE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/resuelve"
-COMPLETE_DISPONE_OUTPUT_DIR = f"{COMPLETE_BASE_OUTPUT_DIR}/dispone"
-
-# TODO: Refactor create_directories like previous modules
 def create_directories():
-    if not os.path.exists(BASE_OUTPUT_DIR):
-        os.mkdir(BASE_OUTPUT_DIR)
-    
-    if not os.path.exists(SPARSE_OUTPUT_DIR):
-        os.mkdir(SPARSE_OUTPUT_DIR)
-
-    if not os.path.exists(VISTO_OUTPUT_DIR):
-        os.mkdir(VISTO_OUTPUT_DIR)
-
-    if not os.path.exists(CONSIDERANDO_OUTPUT_DIR):
-        os.mkdir(CONSIDERANDO_OUTPUT_DIR)
-
-    if not os.path.exists(RESUELVE_OUTPUT_DIR):
-        os.mkdir(RESUELVE_OUTPUT_DIR)
-
-    if not os.path.exists(DISPONE_OUTPUT_DIR):
-        os.mkdir(DISPONE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_BASE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_BASE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_COMPLETE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_COMPLETE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_RESUELVE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_RESUELVE_OUTPUT_DIR)
-
-    if not os.path.exists(COMPLETE_DISPONE_OUTPUT_DIR):
-        os.mkdir(COMPLETE_DISPONE_OUTPUT_DIR)
-
+    os.makedirs(config["SPARSE_INDEX_VISTO_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_CONSIDERANDO_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_RESUELVE_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_DISPONE_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_RESOLUTIVA_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_COMPLETE_COMPLETE_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_COMPLETE_DISPONE_DIR"], exist_ok = True)
+    os.makedirs(config["SPARSE_INDEX_COMPLETE_RESUELVE_DIR"], exist_ok = True)
 
 def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
 
@@ -79,6 +33,9 @@ def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
     indexref = indexer.index(INPUT_DIR)
 
 
+def documents_dir(base_dir: str):
+    return base_dir + '/documents'
+
 
 def terrier_index():
     logger.info("Sparse Indexer Started")
@@ -90,13 +47,14 @@ def terrier_index():
 
     stopwords = nltk.corpus.stopwords.words("spanish")
 
-    index_directory(VISTO_INPUT_DIR, VISTO_OUTPUT_DIR, stopwords)
-    index_directory(RESUELVE_INPUT_DIR, RESUELVE_OUTPUT_DIR, stopwords)
-    index_directory(CONSIDERANDO_INPUT_DIR, CONSIDERANDO_OUTPUT_DIR, stopwords)
-    index_directory(DISPONE_INPUT_DIR, DISPONE_OUTPUT_DIR, stopwords)
+    index_directory(documents_dir(config["SECTION_VISTO_DIR"]), config["SPARSE_INDEX_VISTO_DIR"], stopwords)
+    index_directory(documents_dir(config["SECTION_CONSIDERANDO_DIR"]), config["SPARSE_INDEX_CONSIDERANDO_DIR"], stopwords)
+    index_directory(documents_dir(config["SECTION_RESUELVE_DIR"]), config["SPARSE_INDEX_RESUELVE_DIR"], stopwords)
+    index_directory(documents_dir(config["SECTION_DISPONE_DIR"]), config["SPARSE_INDEX_DISPONE_DIR"], stopwords)
+    index_directory(documents_dir(config["SECTION_RESOLUTIVA_DIR"]), config["SPARSE_INDEX_RESOLUTIVA_DIR"], stopwords)
 
-    index_directory(COMPLETE_COMPLETE_INPUT_DIR, COMPLETE_COMPLETE_OUTPUT_DIR, stopwords)
-    index_directory(COMPLETE_RESUELVE_INPUT_DIR, COMPLETE_RESUELVE_OUTPUT_DIR, stopwords)
-    index_directory(COMPLETE_DISPONE_INPUT_DIR, COMPLETE_DISPONE_OUTPUT_DIR, stopwords)
+    index_directory(config["COMPLETE_DIR"], config["SPARSE_INDEX_COMPLETE_COMPLETE_DIR"], stopwords)
+    index_directory(config["DISPOSITIONS_DIR"], config["SPARSE_INDEX_COMPLETE_DISPONE_DIR"], stopwords)
+    index_directory(config["RESOLUTIONS_DIR"], config["SPARSE_INDEX_COMPLETE_RESUELVE_DIR"], stopwords)
 
     logger.info("Sparse Indexer Ended")

@@ -5,6 +5,7 @@ import logging
 import time
 from utils.objects.document import Document
 from utils.objects.metadata import Metadata
+import random
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
 
@@ -15,7 +16,6 @@ RESOLUTION_DIR = config["RESOLUTIONS_DIR"]
 DISPOSITION_DIR = config["DISPOSITIONS_DIR"]
 
 RAW_OUTPUT_DIR = config["DOWNLOADER_CONVERTER_RAW_DIR"]
-DOWNLOADS_NOT_FOUND = config["DOWNLOADER_CONVERTER_NOT_FOUND_DOCS"]
 
 
 def create_directories():
@@ -39,10 +39,9 @@ def save_parsed_text(parsed_text, document: Document):
     document.set_txt_path(filepath)
 
 
-def process_not_found_document(filename, url):
-    with open(DOWNLOADS_NOT_FOUND, 'a', encoding="utf-8") as file:
-        file.write(f"{filename},{url}\n")
-
+def process_not_found_document(filename, response, url):
+    document = Document(url=url, content_bytes=response.content, file_name=filename)
+    metadata.error(document, "Download not found")
 
 def not_found_document(content):
     return "El documento que ha solicitado no existe." in str(content) or "No tiene permisos suficientes para ver este documento." in str(content)
@@ -73,7 +72,7 @@ def process_document_from_url(url, index, retry_number=0):
             file_name = f"doc-{index}"
 
         if not_found_document(response.content):
-            process_not_found_document(file_name, url)
+            process_not_found_document(file_name, response, url)
         else:
             process_valid_document(file_name, response, url)
 
@@ -105,10 +104,11 @@ def download_documents(number_of_docs: int):
 
     create_directories()
 
-    for i in tqdm(range(0, number_of_docs + 1)):
+    for i in tqdm(range(0, number_of_docs + 1), desc="Descargando documentos", unit="doc"):
+        doc_id = random.randint(0, 100000)
         try:
-            url = f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={i}"
-            process_document_from_url(url, i)
+            url = f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={doc_id}"
+            process_document_from_url(url, doc_id)
 
         except Exception as e:
             logger.warning(f"Skipping process of URL {url}. Exception {e}")

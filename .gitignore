@@ -18,3 +18,5 @@
 *.zdata
 *.properties
 *.DS_Store
+/indexes/*
+*.tmp

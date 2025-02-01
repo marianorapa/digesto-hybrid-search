@@ -70,7 +70,8 @@ def do_extract_sections():
         
         if len(sections) < 3:
             extract_sections_metadata.error(document, "Less than 3 sections")
-            pass
+            logger.warning(f"Less than 3 sections in doc {document.get_id()}")
+            continue
 
         visto_section = sections[0]
         considerando_section = sections[1]

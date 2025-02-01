@@ -1,6 +1,8 @@
 import shutil
 import os
 
+config = os.environ
+
 def remove_whatever(path):
     try:
         os.remove(path)
@@ -18,6 +20,10 @@ def clear_execution_dirs():
     remove_whatever("deleted-files.txt")
     remove_whatever("downloads-empty.txt")
     remove_whatever("downloads-meta.txt")
+    remove_whatever(config["EMBEDDINGS_GENERATOR_META_FILE"])
+    remove_whatever(config["SENTENCES_META_FILE"])
+    remove_whatever(config["DOWNLOADER_CONVERTER_META_FILE"])
+    remove_whatever(config["EXTRACT_SECTIONS_META_FILE"])
 
     remove_whatever("collection")
     remove_whatever("indexes")
