@@ -3,6 +3,8 @@ from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
 import pyterrier as pt
 import os
+from nltk import word_tokenize
+from nltk.stem import SnowballStemmer
 
 config = os.environ
 
@@ -21,38 +23,38 @@ def get_url_from_filename(filename):
         return get_url(filename)
 
 
-#def get_relevant_documents_sparse(index, query, k):
-#        if not pt.started():
-#                pt.init()
-#
-#        output_dir = INDEXES[index]
-#
-#        index = pt.IndexFactory.of(f"{output_dir}/data.properties")
-#
-#        pipe = pt.rewrite.tokenise("utf") >> pt.BatchRetrieve(index, wmodel="BM25")
-#
-#        query_results = pipe.search(query)
-#
-#        meta = index.getMetaIndex()
-#
-#        final_results = []
-#        counter = 0
-#        for index, row in query_results.iterrows():
-#                doc_id = row['docid']
-#                score = row['score']
-#                rank = row['rank'] + 1
-#                filename = meta.getAllItems(doc_id)[1]
-#                doc_url = get_url_from_filename(filename)
-#                final_results.append([doc_id, score, filename, rank, doc_url])
-#
-#                counter += 1
-#                if counter == k:
-#                        break
-#
-#
-#        doc_ids = list(query_results.docid)
-#
-#        return final_results
+def get_relevant_documents_sparse(index, query, k):
+       if not pt.started():
+               pt.init()
+
+       output_dir = INDEXES[index]
+
+       index = pt.IndexFactory.of(f"{output_dir}/data.properties")
+
+       pipe = pt.rewrite.tokenise(config["SPARSE_TOKENIZER"]) >> pt.BatchRetrieve(index, wmodel=config["SPARSE_MODEL"])
+
+       query_results = pipe.search(query)
+
+       meta = index.getMetaIndex()
+
+       final_results = []
+       counter = 0
+       for index, row in query_results.iterrows():
+               doc_id = row['docid']
+               score = row['score']
+               rank = row['rank'] + 1
+               filename = meta.getAllItems(doc_id)[1]
+               doc_url = get_url_from_filename(filename)
+               final_results.append([doc_id, score, filename, rank, doc_url])
+
+               counter += 1
+               if counter == k:
+                       break
+
+
+       doc_ids = list(query_results.docid)
+
+       return final_results
 
 ## Duplicate and refactor previous function, to retro-compatibility
 def get_ranking_sparse(index, query, k, relevant_documents_ids):
@@ -63,12 +65,10 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")
 
-        pipe = pt.rewrite.tokenise("utf") >> pt.BatchRetrieve(index, wmodel="BM25", num_results = config["RANKING_LIMIT"])
-
-        query_results = pipe.search(query)
+        bm25_stem = pt.terrier.Retriever(index, wmodel='BM25')
+        query_results = bm25_stem.search(query)
 
         meta = index.getMetaIndex()
-
 
         sparse_ranking = Ranking()
         sparse_ranking.set_ranking_name("Rank Sparse")
@@ -79,11 +79,9 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
         for index, row in query_results.iterrows():
                 doc_id = row['docid']
                 filename = meta.getAllItems(doc_id)[1]
-                print(f"Filename {filename}")
-                break
-                #doc_url = get_url_from_filename(filename)
-
-                #document = Document()
+                document = Document(txt_path = filename)
+                document.get_url()
+                sparse_ranking.add_document(document, row['score'])
                 #document.set_id_from_url(doc_url)
                 #sparse_ranking.add_document(document, row['score'])
 

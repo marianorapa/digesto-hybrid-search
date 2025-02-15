@@ -19,16 +19,12 @@ def create_directories():
 
 def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
 
-    #print(stopwords)
-    
     indexer = pt.FilesIndexer(index_path = OUTPUT_DIR, 
                           overwrite = True, 
                           verbose = True,
-                          stemmer = 'SpanishSnowballStemmer',
-                          tokeniser = "utf")
-                          #stopwords = stopwords)
-    
-    # Deuda de comprender más el transfondo de estos parámetros. https://github.com/terrier-org/pyterrier/blob/master/examples/notebooks/non_en_retrieval.ipynb
+                          stemmer = config["SPARSE_STEMMER"],
+                          tokeniser = config["SPARSE_TOKENIZER"],
+                          stopwords = ['a', 'an', 'the'])
     
     indexref = indexer.index(INPUT_DIR)
 

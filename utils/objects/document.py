@@ -30,15 +30,17 @@ def check_doc_was_indexed(doc_code, doc_url):
     return file_downloaded and not_empty_result and not_deleted_result
     
 class Document:
-    def __init__(self, url = None, content_bytes = None, file_name = None):
+    def __init__(self, url = None, content_bytes = None, file_name = None, txt_path = None):
         self.id = None
         self.url = url
         if url:
             self.set_id_from_url(url)
+        self.txt_path = txt_path
+        if self.txt_path:
+            self.set_id_from_txt_path()
         self.content_bytes = content_bytes
         self.file_name = file_name
         self.pdf_path = None
-        self.txt_path = None
         self.txt_file_name = None
         self.successful = None
         self.error_type = None
@@ -67,6 +69,9 @@ class Document:
 
     def set_id_from_url(self, url):
         self.id = int(url.split("cod=")[-1])
+
+    def set_id_from_txt_path(self):
+        self.id = int(self.txt_path.split("doc_")[-1].split(".txt")[0])
 
     def get_url(self):
         return f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={self.id}"

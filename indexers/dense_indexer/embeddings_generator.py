@@ -15,6 +15,9 @@ logger = logging.getLogger("digesto-hybrid-search-logger")
 
 config = os.environ
 
+USE_NORMALIZATION = config['SENTENCE_TRANSFORMER_NORMALIZATION'].strip().lower() in ("true", "1", "yes", "on")
+
+
 def init_metadata():
     global sentences_metadata, embeddings_generator_metadata
     sentences_metadata = Metadata(config["SENTENCES_META_FILE"]).load()
@@ -41,7 +44,7 @@ def add_to_dense_index(dense_indexes, embedding, document_type, doc_id):
 def generate_embedding_of_sentences(model, sentences):
     embeddings_of_sentences = []
     for sentence in sentences:
-        embedding = model.encode(sentence)
+        embedding = model.encode(sentence, normalize_embeddings=USE_NORMALIZATION)
         embeddings_of_sentences.append(embedding)
 
     return np.mean(embeddings_of_sentences, axis=0)
@@ -110,7 +113,7 @@ def create_dense_indexes_structure():
 
     for key in ["visto", "considerando", "resuelve", "dispone", "resoluciones", "disposiciones", "completo", "resolutiva"]:
         dense_indexes[key] = {}
-        dense_indexes[key]["index"] = faiss.IndexFlatL2(768)
+        dense_indexes[key]["index"] = faiss.IndexFlatL2(int(config["SENTENCE_TRANSFORMER_MODEL_DIMENSIONS"]))
         dense_indexes[key]["counter"] = 0
         dense_indexes[key]["metadata"] = {}
 
@@ -148,7 +151,7 @@ def generate_embeddings():
 
     create_directories()
 
-    model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
+    model = SentenceTransformer(config["SENTENCE_TRANSFORMER_MODEL"])
 
     init_metadata()
 

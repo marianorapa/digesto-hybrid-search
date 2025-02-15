@@ -32,7 +32,9 @@ INDEXES = {
         "COMPLETE_DISPONE": COMPLETE_DISPONE_OUTPUT_DIR,
 }
 
-model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
+config = os.environ
+
+model = SentenceTransformer(config["SENTENCE_TRANSFORMER_MODEL"])
 
 def retrieve_index(index_name):
     # lee el indice del archivo -> .bin? 

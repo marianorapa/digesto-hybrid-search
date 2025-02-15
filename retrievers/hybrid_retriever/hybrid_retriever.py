@@ -4,7 +4,7 @@ import numpy as np
 from numpy import dot
 from numpy.linalg import norm
 import logging
-
+import os
 from utils.objects.document import Document
 from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
@@ -31,11 +31,13 @@ INDEXES = {
         "COMPLETE_DISPONE": COMPLETE_DISPONE_OUTPUT_DIR,
 }
 
+config = os.environ
+
 def cosine_similarity_of_vectors(a, b):
     return dot(a, b)/(norm(a)*norm(b))
 
 def create_embedding(query):
-    model = SentenceTransformer('hiiamsid/sentence_similarity_spanish_es')
+    model = SentenceTransformer(config["SENTENCE_TRANSFORMER_MODEL"])
 
     return model.encode(query)
 

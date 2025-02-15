@@ -53,9 +53,9 @@ from preprocessors.sections_splitter.extract_sections import extract_sections
 from preprocessors.sentence_splitter.sentence import split_sentences
 from indexers.dense_indexer.embeddings_generator import generate_embeddings
 from indexers.sparse_indexer.terrier_indexer import terrier_index
-from retrievers.sparse_retriever.terrier_retriever import get_relevant_documents_sparse
-from retrievers.hybrid_retriever.hybrid_retriever import get_relevant_documents_hybrid
-from retrievers.dense_retriever.dense_retriever import get_relevant_documents_dense
+from retrievers.sparse_retriever.terrier_retriever import get_ranking_sparse
+from retrievers.hybrid_retriever.hybrid_retriever import get_ranking_hybrid
+from retrievers.dense_retriever.dense_retriever import get_ranking_dense
 import utils.query_executor
 
 DOWNLOAD_INDEX_DOCS = 0
@@ -127,11 +127,11 @@ def retrieve_suboptions():
     while not back_to_main_menu:
         index_sel = index_type_menu.show()
         if (index_sel == 0):
-            retriever = get_relevant_documents_sparse
+            retriever = get_ranking_sparse
         elif (index_sel == 1):
-            retriever = get_relevant_documents_dense
+            retriever = get_ranking_dense
         elif (index_sel == 2):
-            retriever = get_relevant_documents_hybrid
+            retriever = get_ranking_hybrid
         elif (index_sel == 3):
             back_to_main_menu = True
 
@@ -151,10 +151,11 @@ def do_retrieve(retriever, collection):
     print(collection)
     query = input("Query: ")
     k = int(input("k documentos a recuperar: "))
-    docs = retriever(collection, query, k)
+    ranking = retriever(collection, query, k, [])
     print("Resultados: ")
-    for doc in docs:
-        print(doc)
+    ranking.set_output_columns(["Order", "ID", "URL", "Relevant", "Score"])
+    print(f"\nResults (Total {ranking.get_last_rank()}):")
+    print(ranking.get_first_k_documents_as_table())
     input("Enter para continuar")
 
 def menu():

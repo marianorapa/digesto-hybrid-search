@@ -14,8 +14,8 @@ sentences_metadata = None
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
 
-nltk.download('punkt')
-es_tokenizer = nltk.data.load("tokenizers/punkt/spanish.pickle")
+nltk.download(config["SENTENCES_TOKENIZER_MODEL"])
+es_tokenizer = nltk.data.load(config["SENTENCES_TOKENIZER_FLAVOR"])
 
 def init_metadata():
     global extract_sections_metadata, sentences_metadata

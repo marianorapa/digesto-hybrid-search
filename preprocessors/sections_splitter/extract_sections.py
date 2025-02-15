@@ -41,7 +41,8 @@ def extract_sections_from_document(document: Document) -> list[str]:
             break
 
     if last is None:
-        extract_sections_metadata.error(document, "Missing last section key")
+        # Missing last section key
+        return []
 
     all_keywords = keywords + [last]
     text = re.sub(r'\s+', ' ', text)
