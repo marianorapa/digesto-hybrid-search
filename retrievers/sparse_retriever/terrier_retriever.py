@@ -22,41 +22,6 @@ INDEXES = {
 def get_url_from_filename(filename):
         return get_url(filename)
 
-
-def get_relevant_documents_sparse(index, query, k):
-       if not pt.started():
-               pt.init()
-
-       output_dir = INDEXES[index]
-
-       index = pt.IndexFactory.of(f"{output_dir}/data.properties")
-
-       pipe = pt.rewrite.tokenise(config["SPARSE_TOKENIZER"]) >> pt.BatchRetrieve(index, wmodel=config["SPARSE_MODEL"])
-
-       query_results = pipe.search(query)
-
-       meta = index.getMetaIndex()
-
-       final_results = []
-       counter = 0
-       for index, row in query_results.iterrows():
-               doc_id = row['docid']
-               score = row['score']
-               rank = row['rank'] + 1
-               filename = meta.getAllItems(doc_id)[1]
-               doc_url = get_url_from_filename(filename)
-               final_results.append([doc_id, score, filename, rank, doc_url])
-
-               counter += 1
-               if counter == k:
-                       break
-
-
-       doc_ids = list(query_results.docid)
-
-       return final_results
-
-## Duplicate and refactor previous function, to retro-compatibility
 def get_ranking_sparse(index, query, k, relevant_documents_ids):
         if not pt.started():
                 pt.init()
@@ -65,8 +30,8 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")
 
-        bm25_stem = pt.terrier.Retriever(index, wmodel='BM25')
-        query_results = bm25_stem.search(query)
+        retriever = pt.terrier.Retriever(index, wmodel=config['SPARSE_MODEL'])
+        query_results = retriever.search(query)
 
         meta = index.getMetaIndex()
 
@@ -82,11 +47,9 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
                 document = Document(txt_path = filename)
                 document.get_url()
                 sparse_ranking.add_document(document, row['score'])
-                #document.set_id_from_url(doc_url)
-                #sparse_ranking.add_document(document, row['score'])
 
-                #counter += 1
-                #if counter == config["RANKING_LIMIT"]:
-                #        break
+                counter += 1
+                if counter == int(config["RANKING_LIMIT"]):
+                        break
 
         return sparse_ranking

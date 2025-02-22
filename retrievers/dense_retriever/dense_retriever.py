@@ -3,33 +3,20 @@ import faiss
 import json
 import os
 import glob
-
 from utils.objects.document import Document
 from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
 
-RANKING_LIMIT = 140000
-
-BASE_OUTPUT_DIR = "./indexes"
-DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index"
-
-VISTO_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/visto"
-CONSIDERANDO_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/considerando"
-RESUELVE_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/resuelve"
-DISPONE_OUTPUT_DIR = f"{DENSE_OUTPUT_DIR}/dispone"
-
-COMPLETE_DENSE_OUTPUT_DIR = f"{BASE_OUTPUT_DIR}/dense_index/completa"
-COMPLETE_COMPLETE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/completa"
-COMPLETE_RESUELVE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/resuelve"
-COMPLETE_DISPONE_OUTPUT_DIR = f"{COMPLETE_DENSE_OUTPUT_DIR}/dispone"
+config = os.environ
 
 INDEXES = {
-        "VISTO": VISTO_OUTPUT_DIR,
-        "CONSIDERANDO": CONSIDERANDO_OUTPUT_DIR,
-        "RESUELVE": RESUELVE_OUTPUT_DIR,
-        "COMPLETE_COMPLETE": COMPLETE_COMPLETE_OUTPUT_DIR,
-        "COMPLETE_RESUELVE": COMPLETE_RESUELVE_OUTPUT_DIR,
-        "COMPLETE_DISPONE": COMPLETE_DISPONE_OUTPUT_DIR,
+        "VISTO": config['EMBEDDINGS_GENERATOR_VISTO_DIR'],
+        "CONSIDERANDO": config['EMBEDDINGS_GENERATOR_CONSIDERANDO_DIR'],
+        "RESUELVE": config['EMBEDDINGS_GENERATOR_RESUELVE_DIR'],
+        "RESOLUTIVA": config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR'],
+        "COMPLETE_COMPLETE": config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR'],
+        "COMPLETE_RESUELVE": config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR'],
+        "COMPLETE_DISPONE": config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR'],
 }
 
 config = os.environ
@@ -43,35 +30,16 @@ def retrieve_index(index_name):
     bin_files = glob.glob(os.path.join(index_dir, "*.bin"))
     bin_filename = os.path.basename(bin_files[0])
     index = faiss.read_index(index_dir + '/' + bin_filename)
-    metadata_file = index_dir + '/' + "index_metadata.json";
+    metadata_file = index_dir + '/' + "index_metadata.json"
     with open(metadata_file) as f:
         metadata = json.load(f)
     return index, metadata
 
-def get_filename_from_metadata(metadata, i):
-    return metadata[str(i)];
+def get_doc_id_from_metadata(metadata, i):
+    return metadata[str(i)]
 
 def get_url_from_filename(filename):
     return get_url(filename)
-
-def get_relevant_documents_dense(index_name, query, k):
-    # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
-    # devuelve los docs
-
-    query_embedding = model.encode(query)
-    faiss_query_embedding = query_embedding.reshape(1, -1)
-
-    index, metadata = retrieve_index(index_name)
-    D, I = index.search(faiss_query_embedding, k)
-    results = []
-    rank = 1
-    for distance, i in zip(D[0], I[0]):
-        filename = get_filename_from_metadata(metadata, i)
-        url = get_url_from_filename(filename)
-        results.append((rank, i, filename, distance, url))
-        rank =+ 1
-    return results
-
 
 def get_ranking_dense(index_name, query, k, relevant_documents_ids):
     # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
@@ -81,7 +49,7 @@ def get_ranking_dense(index_name, query, k, relevant_documents_ids):
     faiss_query_embedding = query_embedding.reshape(1, -1)
 
     index, metadata = retrieve_index(index_name)
-    D, I = index.search(faiss_query_embedding, RANKING_LIMIT)
+    D, I = index.search(faiss_query_embedding, int(config['RANKING_LIMIT']))
 
     dense_ranking = Ranking()
     dense_ranking.set_ranking_name("Rank Dense")
@@ -90,11 +58,9 @@ def get_ranking_dense(index_name, query, k, relevant_documents_ids):
 
     for distance, i in zip(D[0], I[0]):
         if (i > -1):
-            filename = get_filename_from_metadata(metadata, i)
-            url = get_url_from_filename(filename)
-
+            doc_id = get_doc_id_from_metadata(metadata, i)
             document = Document()
-            document.set_id_from_url(url)
+            document.set_id(doc_id)
             dense_ranking.add_document(document, distance)
 
     return dense_ranking

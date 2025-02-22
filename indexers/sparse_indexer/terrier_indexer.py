@@ -23,8 +23,7 @@ def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
                           overwrite = True, 
                           verbose = True,
                           stemmer = config["SPARSE_STEMMER"],
-                          tokeniser = config["SPARSE_TOKENIZER"],
-                          stopwords = ['a', 'an', 'the'])
+                          tokeniser = config["SPARSE_TOKENIZER"])
     
     indexref = indexer.index(INPUT_DIR)
 

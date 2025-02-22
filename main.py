@@ -54,7 +54,8 @@ from preprocessors.sentence_splitter.sentence import split_sentences
 from indexers.dense_indexer.embeddings_generator import generate_embeddings
 from indexers.sparse_indexer.terrier_indexer import terrier_index
 from retrievers.sparse_retriever.terrier_retriever import get_ranking_sparse
-from retrievers.hybrid_retriever.hybrid_retriever import get_ranking_hybrid
+from retrievers.hybrid_retriever.hybrid_retriever import get_ranking_hybrid_interpolating_rank
+from retrievers.hybrid_retriever.hybrid_retriever import get_ranking_hybrid_interpolating_score
 from retrievers.dense_retriever.dense_retriever import get_ranking_dense
 import utils.query_executor
 
@@ -108,7 +109,7 @@ def compare_models():
 
 
 def retrieve_suboptions():
-    type_options = ["Sparse", "Dense", "Hybrid", "Volver"]
+    type_options = ["Sparse", "Dense", "Hybrid (Score)", "Hybrid (Rank)", "Volver"]
     index_type_menu = TerminalMenu(type_options)
     collection_options = {
         "Completo": "COMPLETE_COMPLETE",
@@ -118,6 +119,7 @@ def retrieve_suboptions():
         "Considerando": "CONSIDERANDO",
         "Resuelve": "RESUELVE",
         "Dispone": "DISPONE",
+        "Resolutiva": "RESOLUTIVA",
         "Volver": ""
     }
 
@@ -131,8 +133,10 @@ def retrieve_suboptions():
         elif (index_sel == 1):
             retriever = get_ranking_dense
         elif (index_sel == 2):
-            retriever = get_ranking_hybrid
+            retriever = get_ranking_hybrid_interpolating_score
         elif (index_sel == 3):
+            retriever = get_ranking_hybrid_interpolating_rank
+        elif (index_sel == 4):
             back_to_main_menu = True
 
         section_options_back = False

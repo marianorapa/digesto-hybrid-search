@@ -28,7 +28,7 @@ class Ranking():
     def set_k_documents(self, k):
         self.k_documents = k
 
-    def add_document(self, document, score=None):
+    def add_document(self, document: Document, score=None):
         if document.get_id() not in self.ranking_by_doc_id.keys():
             self.documents.append([document, score])
 
@@ -104,8 +104,8 @@ class Ranking():
         return self.output_columns_keys + reference_ranking_column_keys
 
 
-    def get_document_ranking(self, doc_id):
-        return self.ranking_by_doc_id.get(doc_id, -1)
+    def get_document_ranking(self, doc_id, default=-1):
+        return self.ranking_by_doc_id.get(doc_id, default)
 
     def __str__(self):
         return self.get_all_documents_as_table()
@@ -126,7 +126,7 @@ class Ranking():
             min_score = self.get_max_score()
             max_score = self.get_min_score()
 
-        print(f"Ranking Name {self.ranking_name}, Max Score: {max_score}, Min Score: {min_score}, Amount of documents {len(self.documents)}")
+        print(f"Ranking Name {self.ranking_name}, Max Score: {max_score}, Min Score: {min_score}, Number of documents {len(self.documents)}")
         for document, score in self.documents:
             normalized_score = (score - min_score) / (max_score - min_score)
             self.normalized_score_by_doc_id[document.get_id()] = normalized_score
@@ -145,6 +145,9 @@ class Ranking():
 
     def set_score_type(self, score):
         self.score_type = score
+
+    def last_ranking_position(self):
+        return len(self.documents)
 
     def merge_interpolating_score(self, ranking):
         w1 = 0.5
@@ -178,6 +181,42 @@ class Ranking():
                 result_ranking.add_document(right_ranking_document, interpolated_score)
             #break
 
+        print(f"Amount of Result Ranking Documents {len(result_ranking.documents)}")
+        result_ranking.sort_documents_by_score()
+        return result_ranking
+
+
+    def calculate_interpolated_ranking(self, k, ranking_left, ranking_right):
+        return (1/(k + ranking_left))+(1/(k + ranking_right))
+
+
+    def merge_interpolating_rank_positions(self, other: "Ranking", k_interpolated_formula):
+        result_ranking = Ranking()
+        result_ranking.set_ranking_name("Hybrid Ranking Interpolating Positions")
+        # result_ranking.set_k_documents(20) # Check why it's set as a constant
+        result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
+
+        print(f"Count of Left Ranking Documents {len(self.documents)}")
+        print(f"Count of Right Ranking Documents {len(other.documents)}")
+
+        for left_ranking_document, _ in self.documents:
+            left_ranking_position = self.get_document_ranking(left_ranking_document.get_id())
+            # the doc might not be in other ranking so we default its ranking to the last value
+            right_ranking_position = other.get_document_ranking(left_ranking_document.get_id(), other.last_ranking_position())
+            
+            interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
+
+            result_ranking.add_document(left_ranking_document, interpolated_ranking)
+
+        for right_ranking_document, _ in other.documents:
+            if result_ranking.get_document_ranking(right_ranking_document.get_id()) == -1: # doc was not in this ranking, hence not added to result yet
+                right_ranking_position = other.get_document_ranking(right_ranking_document.get_id())
+                # the doc might not be in other ranking so we default its ranking to the last value
+                left_ranking_position = self.get_document_ranking(right_ranking_document.get_id(), self.last_ranking_position())
+
+                interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
+                result_ranking.add_document(right_ranking_document, interpolated_ranking)
+        
         print(f"Amount of Result Ranking Documents {len(result_ranking.documents)}")
         result_ranking.sort_documents_by_score()
         return result_ranking

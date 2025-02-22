@@ -130,14 +130,14 @@ def persist_dense_indexes(dense_indexes):
             root_directory = config['EMBEDDINGS_GENERATOR_RESUELVE_DIR']
         elif key == "dispone":
             root_directory = config['EMBEDDINGS_GENERATOR_DISPONE_DIR']
+        elif key == "resolutiva":
+            root_directory = config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR']
         elif key == "resoluciones":
             root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR']
         elif key == "disposiciones":
             root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR']
         elif key == "completo":
             root_directory = config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']
-        elif key == "resolutiva":
-            root_directory = config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR']
 
         index = dense_indexes[key]["index"]
         faiss.write_index(index, f"{root_directory}/index_{key}.bin")
@@ -160,6 +160,8 @@ def generate_embeddings():
     valid_docs = sentences_metadata.get_valid_documents()
 
     generate_embeddings_from_doc_list(model, valid_docs, dense_indexes)
+
+    persist_dense_indexes(dense_indexes)
 
     logger.info("Dense Indexer Ended")
 
