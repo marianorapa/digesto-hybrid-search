@@ -23,7 +23,8 @@ def index_directory(INPUT_DIR, OUTPUT_DIR, stopwords):
                           overwrite = True, 
                           verbose = True,
                           stemmer = config["SPARSE_STEMMER"],
-                          tokeniser = config["SPARSE_TOKENIZER"])
+                          tokeniser = config["SPARSE_TOKENIZER"], 
+                          stopwords = stopwords)
     
     indexref = indexer.index(INPUT_DIR)
 
@@ -40,7 +41,7 @@ def terrier_index():
 
     nltk.download('stopwords')
 
-    stopwords = nltk.corpus.stopwords.words("spanish")
+    stopwords = nltk.corpus.stopwords.words(config["SPARSE_NLTK_STOPWORDS"])
 
     index_directory(documents_dir(config["SECTION_VISTO_DIR"]), config["SPARSE_INDEX_VISTO_DIR"], stopwords)
     index_directory(documents_dir(config["SECTION_CONSIDERANDO_DIR"]), config["SPARSE_INDEX_CONSIDERANDO_DIR"], stopwords)
