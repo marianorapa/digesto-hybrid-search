@@ -22,7 +22,7 @@ INDEXES = {
 def get_url_from_filename(filename):
         return get_url(filename)
 
-def get_ranking_sparse(index, query, k, relevant_documents_ids):
+def get_ranking_sparse(index, query, k, relevant_documents_ids, docs_metadata):
         if not pt.started():
                 pt.init()
 
@@ -33,7 +33,7 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
         retriever = pt.terrier.Retriever(index, wmodel=config['SPARSE_MODEL'])
         query_results = retriever.search(query)
 
-        meta = index.getMetaIndex()
+        terrier_metadata = index.getMetaIndex()
 
         sparse_ranking = Ranking()
         sparse_ranking.set_ranking_name("Rank Sparse")
@@ -42,10 +42,14 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids):
 
         counter = 0
         for index, row in query_results.iterrows():
-                doc_id = row['docid']
-                filename = meta.getAllItems(doc_id)[1]
-                document = Document(txt_path = filename)
-                document.get_url()
+                terrier_doc_id = row['docid']
+                filename = terrier_metadata.getAllItems(terrier_doc_id)[1]
+
+                if docs_metadata != None:
+                        document = docs_metadata.get_document_by_id(Document.get_doc_id_from_filename(filename), True)
+                else:
+                        document = Document(txt_path = filename)
+
                 sparse_ranking.add_document(document, row['score'])
 
                 counter += 1

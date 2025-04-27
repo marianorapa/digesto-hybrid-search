@@ -41,7 +41,7 @@ def get_doc_id_from_metadata(metadata, i):
 def get_url_from_filename(filename):
     return get_url(filename)
 
-def get_ranking_dense(index_name, query, k, relevant_documents_ids):
+def get_ranking_dense(index_name, query, k, relevant_documents_ids, docs_metadata):
     # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
     # devuelve los docs
 
@@ -59,8 +59,11 @@ def get_ranking_dense(index_name, query, k, relevant_documents_ids):
     for distance, i in zip(D[0], I[0]):
         if (i > -1):
             doc_id = get_doc_id_from_metadata(metadata, i)
-            document = Document()
-            document.set_id(doc_id)
+            if docs_metadata != None:
+                document = docs_metadata.get_document_by_id(doc_id, True)
+            else:
+                document = Document()
+                document.set_id(doc_id)
             dense_ranking.add_document(document, distance)
 
     return dense_ranking

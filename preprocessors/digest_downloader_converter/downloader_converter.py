@@ -104,8 +104,7 @@ def download_documents(number_of_docs: int):
 
     create_directories()
 
-    for i in tqdm(range(0, number_of_docs + 1), desc="Descargando documentos", unit="doc"):
-        doc_id = random.randint(0, 100000)
+    for doc_id in tqdm(range(0, number_of_docs + 1), desc="Descargando documentos", unit="doc"):
         try:
             url = f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={doc_id}"
             process_document_from_url(url, doc_id)

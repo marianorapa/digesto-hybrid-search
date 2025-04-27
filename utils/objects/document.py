@@ -4,36 +4,11 @@ from pypdf import PdfReader
 import re
 import json
 
-def file_was_downloaded(doc_url):
-    return get_filename_from_url(doc_url) != None
-
-def not_empty(doc_code):
-    with open("downloads-empty.txt", 'r') as file:
-        for line in file.readlines():
-            # check if the file url contains the doc code passed as arg
-            if line.split(",")[-1].split('cod=')[-1] == doc_code:
-                return False
-    return True
-
-def not_deleted(doc_url):
-    filename = get_filename_from_url(doc_url)
-    with open("deleted-files.txt", 'r') as file:
-        for line in file.readlines():
-            if line.split(",")[0] == filename:
-                return False
-    return True
-
-def check_doc_was_indexed(doc_code, doc_url):
-    file_downloaded = file_was_downloaded(doc_url)
-    not_empty_result = not_empty(doc_code)
-    not_deleted_result = not_deleted(doc_url)
-    return file_downloaded and not_empty_result and not_deleted_result
-    
 class Document:
-    def __init__(self, url = None, content_bytes = None, file_name = None, txt_path = None):
-        self.id = None
+    def __init__(self, doc_id = None, url = None, content_bytes = None, file_name = None, txt_path = None):
+        self.id = doc_id
         self.url = url
-        if url:
+        if url != None:
             self.set_id_from_url(url)
         self.txt_path = txt_path
         if self.txt_path:
@@ -56,7 +31,7 @@ class Document:
         self.resuelve_sentences_path = None
 
     def get_id(self):
-        return self.id
+        return int(self.id)
     
     def get_doc_id(self) -> str:
         return f"doc_{str(self.id)}"
@@ -68,7 +43,7 @@ class Document:
         return self.file_name
 
     def set_id_from_url(self, url):
-        self.id = int(url.split("cod=")[-1])
+        self.id = Document.get_id_from_url(url)
 
     def set_id_from_txt_path(self):
         self.id = int(self.txt_path.split("doc_")[-1].split(".txt")[0])
@@ -77,7 +52,7 @@ class Document:
         return f"https://resoluciones.unlu.edu.ar/documento.view.php?cod={self.id}"
 
     def is_indexed(self):
-        return check_doc_was_indexed(self.get_id(), self.get_url())
+        return self.is_success()
 
     def cleaned_filename(self):
         return urllib.parse.quote_plus(self.file_name)
@@ -149,7 +124,7 @@ class Document:
         return self
     
     def is_success(self):
-        return self.successful
+        return self.successful == True
         
     def error(self, error):
         self.successful = False
@@ -249,3 +224,9 @@ class Document:
         document.successful = json["successful"]
         document.error_type = json["error"] if "error" in json else None
         return document
+    
+    def get_id_from_url(url):
+        return int(url.split("cod=")[-1])
+    
+    def get_doc_id_from_filename(filename):
+        return int(filename.split("doc_")[-1].split(".txt")[0])

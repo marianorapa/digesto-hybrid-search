@@ -26,3 +26,13 @@ class Metadata:
 
     def get_valid_documents(self) -> List[Document]:
         return [document for document_json in self.metadata.values() if (document := Document.from_json(json=document_json)).is_success()]
+    
+    def get_document_by_id(self, doc_id, use_default_doc = False) -> Document:
+        try:
+            document_json = self.metadata[str(doc_id)]
+            return Document.from_json(json=document_json)
+        except KeyError:
+            if use_default_doc:
+                return Document(doc_id)
+            else:
+                return None

@@ -1,6 +1,8 @@
 import logging
 import logging.config
 
+from utils.objects.metadata import Metadata
+
 LOGGING_CONFIG = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -66,6 +68,7 @@ RETRIEVE_DOCS = 3
 COMPARE_MODELS = 4
 CLEAR = 5
 EXIT = 6
+DOCS_METADATA_FILE_PATH = "preprocessors/sentence_splitter/sentences_meta.json" # final preprocessing meta file
 
 def process_option(menu_entry_index):
     if menu_entry_index == DOWNLOAD_DOCS:
@@ -151,11 +154,10 @@ def retrieve_suboptions():
                 back_to_main_menu = True
 
 def do_retrieve(retriever, collection):
-    print(retriever)
-    print(collection)
+    metadata = Metadata(DOCS_METADATA_FILE_PATH)
     query = input("Query: ")
     k = int(input("k documentos a recuperar: "))
-    ranking = retriever(collection, query, k, [])
+    ranking = retriever(collection, query, k, [], metadata)
     print("Resultados: ")
     ranking.set_output_columns(["Order", "ID", "URL", "Relevant", "Score"])
     print(f"\nResults (Total {ranking.get_last_rank()}):")

@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 from utils.objects.document import Document
+from utils.objects.metadata import Metadata
 from utils.objects.ranking import Ranking
 
 def build_headers(session_id):
@@ -82,7 +83,7 @@ def do_execute_query_current_digest(url, query, session_id=None):
     return links
 
 
-def get_relevant_documents_current_digest(index, query, k, relevant_documents_ids):
+def get_relevant_documents_current_digest(index, query, k, relevant_documents_ids, metadata):
     # TODO index modification is not implemented, only querying default index adding parameter to be consistent
     #  with other retrievers
 
@@ -94,8 +95,12 @@ def get_relevant_documents_current_digest(index, query, k, relevant_documents_id
     ranking_current_digest.set_relevant_documents_ids(relevant_documents_ids)
 
     for link in result_links_URI:
-        document = Document()
-        document.set_id_from_url(link)
+        if metadata == None:
+            document = Document()
+            document.set_id_from_url(link)
+        else:
+            document = metadata.get_document_by_id(Document.get_id_from_url(link), True)
+
         ranking_current_digest.add_document(document)
 
     return ranking_current_digest
