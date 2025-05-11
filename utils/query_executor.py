@@ -11,29 +11,30 @@ import logging
 METADATA_FILE_PATH = 'preprocessors/sentence_splitter/sentences_meta.json'
 
 logger = logging.getLogger("digesto-hybrid-search-logger")
+INDEX_TO_QUERY = "RESOLUTIVA"
 
 def query_sparse(query, k, relevant_documents_ids, docs_metadata):
-    default_index = "COMPLETE_COMPLETE"
+    default_index = INDEX_TO_QUERY
     ranking_sparse = get_ranking_sparse(default_index, query, k, relevant_documents_ids, docs_metadata)
     return ranking_sparse
 
 def query_dense(query, k, relevant_documents_ids, docs_metadata):
-    default_index = "COMPLETE_COMPLETE"
+    default_index = INDEX_TO_QUERY
     ranking_dense = get_ranking_dense(default_index, query, k, relevant_documents_ids, docs_metadata)
     return ranking_dense
 
 def query_hybrid_interpolating_rank(query, k, relevant_documents_ids, docs_metadata):
-    default_index = "COMPLETE_COMPLETE"
+    default_index = INDEX_TO_QUERY
     ranking_hybrid = get_ranking_hybrid_interpolating_rank(default_index, query, k, relevant_documents_ids, docs_metadata)
     return ranking_hybrid
 
 def query_hybrid_interpolating_score(query, k, relevant_documents_ids, docs_metadata):
-    default_index = "COMPLETE_COMPLETE"
+    default_index = INDEX_TO_QUERY
     ranking_hybrid = get_ranking_hybrid_interpolating_score(default_index, query, k, relevant_documents_ids, docs_metadata)
     return ranking_hybrid
 
 def query_current_digest(query, k, relevant_documents_ids, metadata):
-    default_index = "COMPLETE_COMPLETE"
+    default_index = INDEX_TO_QUERY
     ranking = get_relevant_documents_current_digest(default_index, query, k, relevant_documents_ids, metadata)
     return ranking
 

@@ -36,9 +36,6 @@ def documents_dir(base_dir: str):
 def terrier_index():
     logger.info("Sparse Indexer Started")
 
-    if not pt.started():
-        pt.init()
-
     nltk.download('stopwords')
 
     stopwords = nltk.corpus.stopwords.words(config["SPARSE_NLTK_STOPWORDS"])

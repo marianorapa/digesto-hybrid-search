@@ -23,9 +23,6 @@ def get_url_from_filename(filename):
         return get_url(filename)
 
 def get_ranking_sparse(index, query, k, relevant_documents_ids, docs_metadata):
-        if not pt.started():
-                pt.init()
-
         output_dir = INDEXES[index]
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")

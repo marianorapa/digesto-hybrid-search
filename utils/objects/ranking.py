@@ -2,8 +2,11 @@ from nltk.corpus.reader import documents
 from tabulate import tabulate
 
 from utils.objects.document import Document
+import logging
 
 EMPTY_RESULT_STRING = "-"
+
+logger = logging.getLogger("digesto-hybrid-search-logger")
 
 class Ranking():
 
@@ -34,7 +37,7 @@ class Ranking():
 
             self.ranking_by_doc_id[document.get_id()] = len(self.documents)
         else:
-            print(f"Warning - Adding {document.get_id()} duplicated in {self.ranking_name}")
+            logger.warning(f"Adding {document.get_id()} duplicated in {self.ranking_name}")
 
     def get_last_rank(self):
         return len(self.documents)
@@ -135,6 +138,8 @@ class Ranking():
         self.documents = sorted(self.documents, key=lambda x: x[1], reverse=True)
 
     def get_document_normalized_score(self, doc_id, default = 0):
+        if self.documents == None or self.documents == []:
+            return default
         if self.normalized_score_by_doc_id == {}:
             self.normalize_documents(self.score_type)
 
@@ -158,9 +163,6 @@ class Ranking():
         result_ranking.set_k_documents(20)
         result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
 
-        print(f"Amount of Left Ranking Documents {len(self.documents)}")
-        print(f"Amount of Right Ranking Documents {len(ranking.documents)}")
-
         for left_ranking_document, _ in self.documents:
 
             left_ranking_normalized_score = self.get_document_normalized_score(left_ranking_document.get_id())
@@ -173,7 +175,7 @@ class Ranking():
         for right_ranking_document, _ in ranking.documents:
             #print(f"Right Ranking Document, position in Result Ranking: {result_ranking.get_document_ranking(right_ranking_document.get_id())}")
             if result_ranking.get_document_ranking(right_ranking_document.get_id()) == -1:
-                print(f"Adding not found document {right_ranking_document.get_id()}")
+                logger.info(f"Adding not found document {right_ranking_document.get_id()}")
                 left_ranking_normalized_score = self.get_document_normalized_score(right_ranking_document.get_id())
                 right_ranking_normalized_score = ranking.get_document_normalized_score(right_ranking_document.get_id())
 
@@ -181,7 +183,6 @@ class Ranking():
                 result_ranking.add_document(right_ranking_document, interpolated_score)
             #break
 
-        print(f"Amount of Result Ranking Documents {len(result_ranking.documents)}")
         result_ranking.sort_documents_by_score()
         return result_ranking
 
@@ -195,9 +196,6 @@ class Ranking():
         result_ranking.set_ranking_name("Hybrid Ranking Interpolating Positions")
         # result_ranking.set_k_documents(20) # Check why it's set as a constant
         result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
-
-        print(f"Count of Left Ranking Documents {len(self.documents)}")
-        print(f"Count of Right Ranking Documents {len(other.documents)}")
 
         for left_ranking_document, _ in self.documents:
             left_ranking_position = self.get_document_ranking(left_ranking_document.get_id())
@@ -217,6 +215,5 @@ class Ranking():
                 interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
                 result_ranking.add_document(right_ranking_document, interpolated_ranking)
         
-        print(f"Amount of Result Ranking Documents {len(result_ranking.documents)}")
         result_ranking.sort_documents_by_score()
         return result_ranking
