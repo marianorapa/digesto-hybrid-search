@@ -154,12 +154,12 @@ class Ranking():
     def last_ranking_position(self):
         return len(self.documents)
 
-    def merge_interpolating_score(self, ranking):
+    def merge_interpolating_score(self, ranking, ranking_name = "Hybrid Ranking Interpolating Score"):
         w1 = 0.5
         w2 = 0.5
 
         result_ranking = Ranking()
-        result_ranking.set_ranking_name("Hybrid Ranking Interpolating Score")
+        result_ranking.set_ranking_name(ranking_name)
         result_ranking.set_k_documents(20)
         result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
 
@@ -191,9 +191,9 @@ class Ranking():
         return (1/(k + ranking_left))+(1/(k + ranking_right))
 
 
-    def merge_interpolating_rank_positions(self, other: "Ranking", k_interpolated_formula):
+    def merge_interpolating_rank_positions(self, other: "Ranking", k_interpolated_formula, ranking_name = "Hybrid Ranking Interpolating Positions"):
         result_ranking = Ranking()
-        result_ranking.set_ranking_name("Hybrid Ranking Interpolating Positions")
+        result_ranking.set_ranking_name(ranking_name)
         # result_ranking.set_k_documents(20) # Check why it's set as a constant
         result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
 

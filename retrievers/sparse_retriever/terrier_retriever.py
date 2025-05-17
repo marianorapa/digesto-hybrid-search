@@ -22,7 +22,7 @@ INDEXES = {
 def get_url_from_filename(filename):
         return get_url(filename)
 
-def get_ranking_sparse(index, query, k, relevant_documents_ids, docs_metadata):
+def get_ranking_sparse(index, query, k, relevant_documents_ids, docs_metadata, ranking_name = "Rank Sparse"):
         output_dir = INDEXES[index]
 
         index = pt.IndexFactory.of(f"{output_dir}/data.properties")
@@ -33,7 +33,7 @@ def get_ranking_sparse(index, query, k, relevant_documents_ids, docs_metadata):
         terrier_metadata = index.getMetaIndex()
 
         sparse_ranking = Ranking()
-        sparse_ranking.set_ranking_name("Rank Sparse")
+        sparse_ranking.set_ranking_name(ranking_name)
         sparse_ranking.set_k_documents(k)
         sparse_ranking.set_relevant_documents_ids(relevant_documents_ids)
 

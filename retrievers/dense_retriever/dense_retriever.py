@@ -13,6 +13,7 @@ INDEXES = {
         "VISTO": config['EMBEDDINGS_GENERATOR_VISTO_DIR'],
         "CONSIDERANDO": config['EMBEDDINGS_GENERATOR_CONSIDERANDO_DIR'],
         "RESUELVE": config['EMBEDDINGS_GENERATOR_RESUELVE_DIR'],
+        "DISPONE": config['EMBEDDINGS_GENERATOR_DISPONE_DIR'],
         "RESOLUTIVA": config['EMBEDDINGS_GENERATOR_RESOLUTIVA_DIR'],
         "COMPLETE_COMPLETE": config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR'],
         "COMPLETE_RESUELVE": config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR'],
@@ -41,7 +42,7 @@ def get_doc_id_from_metadata(metadata, i):
 def get_url_from_filename(filename):
     return get_url(filename)
 
-def get_ranking_dense(index_name, query, k, relevant_documents_ids, docs_metadata):
+def get_ranking_dense(index_name, query, k, relevant_documents_ids, docs_metadata, ranking_name = "Rank Dense"):
     # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
     # devuelve los docs
 
@@ -52,7 +53,7 @@ def get_ranking_dense(index_name, query, k, relevant_documents_ids, docs_metadat
     D, I = index.search(faiss_query_embedding, int(config['RANKING_LIMIT']))
 
     dense_ranking = Ranking()
-    dense_ranking.set_ranking_name("Rank Dense")
+    dense_ranking.set_ranking_name(ranking_name)
     dense_ranking.set_k_documents(k)
     dense_ranking.set_relevant_documents_ids(relevant_documents_ids)
 
