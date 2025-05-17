@@ -129,7 +129,6 @@ class Ranking():
             min_score = self.get_max_score()
             max_score = self.get_min_score()
 
-        print(f"Ranking Name {self.ranking_name}, Max Score: {max_score}, Min Score: {min_score}, Number of documents {len(self.documents)}")
         for document, score in self.documents:
             normalized_score = (score - min_score) / (max_score - min_score)
             self.normalized_score_by_doc_id[document.get_id()] = normalized_score
@@ -175,7 +174,6 @@ class Ranking():
         for right_ranking_document, _ in ranking.documents:
             #print(f"Right Ranking Document, position in Result Ranking: {result_ranking.get_document_ranking(right_ranking_document.get_id())}")
             if result_ranking.get_document_ranking(right_ranking_document.get_id()) == -1:
-                logger.info(f"Adding not found document {right_ranking_document.get_id()}")
                 left_ranking_normalized_score = self.get_document_normalized_score(right_ranking_document.get_id())
                 right_ranking_normalized_score = ranking.get_document_normalized_score(right_ranking_document.get_id())
 
