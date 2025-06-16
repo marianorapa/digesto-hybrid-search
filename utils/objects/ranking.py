@@ -134,7 +134,13 @@ class Ranking():
             self.normalized_score_by_doc_id[document.get_id()] = normalized_score
 
     def sort_documents_by_score(self):
+        # Ordenar los documentos por score
         self.documents = sorted(self.documents, key=lambda x: x[1], reverse=True)
+        
+        # Actualizar las posiciones en ranking_by_doc_id
+        self.ranking_by_doc_id = {}
+        for i, (doc, _) in enumerate(self.documents, 1):
+            self.ranking_by_doc_id[doc.get_id()] = i
 
     def get_document_normalized_score(self, doc_id, default = 0):
         if self.documents == None or self.documents == []:
@@ -192,26 +198,32 @@ class Ranking():
     def merge_interpolating_rank_positions(self, other: "Ranking", k_interpolated_formula, ranking_name = "Hybrid Ranking Interpolating Positions"):
         result_ranking = Ranking()
         result_ranking.set_ranking_name(ranking_name)
-        # result_ranking.set_k_documents(20) # Check why it's set as a constant
         result_ranking.set_relevant_documents_ids(self.relevant_documents_ids)
-
-        for left_ranking_document, _ in self.documents:
-            left_ranking_position = self.get_document_ranking(left_ranking_document.get_id())
-            # the doc might not be in other ranking so we default its ranking to the last value
-            right_ranking_position = other.get_document_ranking(left_ranking_document.get_id(), other.last_ranking_position())
-            
-            interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
-
-            result_ranking.add_document(left_ranking_document, interpolated_ranking)
-
-        for right_ranking_document, _ in other.documents:
-            if result_ranking.get_document_ranking(right_ranking_document.get_id()) == -1: # doc was not in this ranking, hence not added to result yet
-                right_ranking_position = other.get_document_ranking(right_ranking_document.get_id())
-                # the doc might not be in other ranking so we default its ranking to the last value
-                left_ranking_position = self.get_document_ranking(right_ranking_document.get_id(), self.last_ranking_position())
-
-                interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
-                result_ranking.add_document(right_ranking_document, interpolated_ranking)
         
+        # Usar un diccionario temporal para evitar duplicados y mantener el mejor score
+        doc_scores = {}
+        
+        # Procesar documentos del ranking de la izquierda (self)
+        for doc, _ in self.documents:
+            doc_id = doc.get_id()
+            left_ranking_position = self.get_document_ranking(doc_id)
+            right_ranking_position = other.get_document_ranking(doc_id, other.last_ranking_position())
+            interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
+            doc_scores[doc_id] = (doc, interpolated_ranking)
+        
+        # Procesar documentos del ranking de la derecha (other) que no están en el de la izquierda
+        for doc, _ in other.documents:
+            doc_id = doc.get_id()
+            if doc_id not in doc_scores:
+                right_ranking_position = other.get_document_ranking(doc_id)
+                left_ranking_position = self.get_document_ranking(doc_id, self.last_ranking_position())
+                interpolated_ranking = self.calculate_interpolated_ranking(k_interpolated_formula, left_ranking_position, right_ranking_position)
+                doc_scores[doc_id] = (doc, interpolated_ranking)
+        
+        # Añadir documentos al ranking resultante
+        for doc, score in doc_scores.values():
+            result_ranking.add_document(doc, score)
+        
+        # Ordenar documentos por score (de mayor a menor)
         result_ranking.sort_documents_by_score()
         return result_ranking

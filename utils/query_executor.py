@@ -199,14 +199,50 @@ def query(query, k, relevant_documents_ids):
     print(f"\nCurrent Digest Results (Total {current_digest_ranking.get_last_rank()}):")
     print(current_digest_ranking.get_first_k_documents_as_table())
     
-    print(f"\nSparse Results (Total {sparse_ranking_complete.get_last_rank()}):")
+    print(f"\{sparse_ranking_complete.get_ranking_name()} (Total {sparse_ranking_complete.get_last_rank()}):")
     print(sparse_ranking_complete.get_first_k_documents_as_table())
 
-    print(f"\nDense Results (Total {dense_ranking_complete.get_last_rank()}):")
+    print(f"\{sparse_ranking_resolution.get_ranking_name()} (Total {sparse_ranking_resolution.get_last_rank()}):")
+    print(sparse_ranking_resolution.get_first_k_documents_as_table())
+
+    print(f"\{sparse_ranking_disposition.get_ranking_name()} (Total {sparse_ranking_disposition.get_last_rank()}):")
+    print(sparse_ranking_disposition.get_first_k_documents_as_table())
+
+    print(f"\{sparse_ranking_resolutive.get_ranking_name()} (Total {sparse_ranking_resolutive.get_last_rank()}):")
+    print(sparse_ranking_resolutive.get_first_k_documents_as_table())
+
+    print(f"\{dense_ranking_complete.get_ranking_name()} (Total {dense_ranking_complete.get_last_rank()}):")
     print(dense_ranking_complete.get_first_k_documents_as_table())
 
-    print(f"\nHybrid Results Score Interpolated (Total {hybrid_ranking_interpolated_score_complete.get_last_rank()}):")
+    print(f"\{dense_ranking_resolutions.get_ranking_name()} (Total {dense_ranking_resolutions.get_last_rank()}):")
+    print(dense_ranking_resolutions.get_first_k_documents_as_table())
+
+    print(f"\{dense_ranking_disposition.get_ranking_name()} (Total {dense_ranking_disposition.get_last_rank()}):")
+    print(dense_ranking_disposition.get_first_k_documents_as_table())
+
+    print(f"\{dense_ranking_resolutive.get_ranking_name()} (Total {dense_ranking_resolutive.get_last_rank()}):")
+    print(dense_ranking_resolutive.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_score_complete.get_ranking_name()} (Total {hybrid_ranking_interpolated_score_complete.get_last_rank()}):")
     print(hybrid_ranking_interpolated_score_complete.get_first_k_documents_as_table())
 
-    print(f"\nHybrid Results Rank Interpolated (Total {hybrid_ranking_interpolated_rank_complete.get_last_rank()}):")
+    print(f"\{hybrid_ranking_interpolated_score_resolution.get_ranking_name()} (Total {hybrid_ranking_interpolated_score_resolution.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_score_resolution.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_score_disposition.get_ranking_name()} (Total {hybrid_ranking_interpolated_score_disposition.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_score_disposition.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_score_resolutive.get_ranking_name()} (Total {hybrid_ranking_interpolated_score_resolutive.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_score_resolutive.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_rank_complete.get_ranking_name()} (Total {hybrid_ranking_interpolated_rank_complete.get_last_rank()}):")
     print(hybrid_ranking_interpolated_rank_complete.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_rank_resolution.get_ranking_name()} (Total {hybrid_ranking_interpolated_rank_resolution.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_rank_resolution.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_rank_disposition.get_ranking_name()} (Total {hybrid_ranking_interpolated_rank_disposition.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_rank_disposition.get_first_k_documents_as_table())
+
+    print(f"\{hybrid_ranking_interpolated_rank_resolutive.get_ranking_name()} (Total {hybrid_ranking_interpolated_rank_resolutive.get_last_rank()}):")
+    print(hybrid_ranking_interpolated_rank_resolutive.get_first_k_documents_as_table()) 
