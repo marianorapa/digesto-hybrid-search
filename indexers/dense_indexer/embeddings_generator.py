@@ -15,9 +15,6 @@ logger = logging.getLogger("digesto-hybrid-search-logger")
 
 config = os.environ
 
-USE_NORMALIZATION = config['SENTENCE_TRANSFORMER_NORMALIZATION'].strip().lower() in ("true", "1", "yes", "on")
-
-
 def init_metadata():
     global sentences_metadata, embeddings_generator_metadata
     sentences_metadata = Metadata(config["SENTENCES_META_FILE"]).load()
@@ -36,6 +33,12 @@ def create_directories():
 # TODO: Changed filename to ID (Fix in next steps)
 # TODO: Should we normalize the vector?
 def add_to_dense_index(dense_indexes, embedding, document_type, doc_id):
+    # Validar que los vectores estén normalizados (L2 norm = 1) antes de agregarlos al índice
+    norm = np.linalg.norm(embedding)
+    if abs(norm - 1.0) > 1e-5:  # Usando un pequeño epsilon para comparaciones de punto flotante
+        logger.warning(f"Vector no normalizado para doc_id {doc_id} (norm={norm}). Normalizando antes de añadir al índice.")
+        embedding = embedding / norm
+    
     dense_indexes[document_type]["index"].add(embedding.reshape(1, -1))
     counter = dense_indexes[document_type]["counter"]
     dense_indexes[document_type]["counter"] = dense_indexes[document_type]["counter"] + 1
@@ -44,10 +47,18 @@ def add_to_dense_index(dense_indexes, embedding, document_type, doc_id):
 def generate_embedding_of_sentences(model, sentences):
     embeddings_of_sentences = []
     for sentence in sentences:
-        embedding = model.encode(sentence, normalize_embeddings=USE_NORMALIZATION)
+        embedding = model.encode(sentence, normalize_embeddings=False)
         embeddings_of_sentences.append(embedding)
 
-    return np.mean(embeddings_of_sentences, axis=0)
+    # Calcular el promedio de los embeddings
+    mean_embedding = np.mean(embeddings_of_sentences, axis=0)
+    
+    # Normalizar el vector promedio para asegurar que tenga norma 1.0
+    norm = np.linalg.norm(mean_embedding)
+    if norm > 0:
+        mean_embedding = mean_embedding / norm
+        
+    return mean_embedding
 
 def generate_embeddings_from_doc_list(model, documents: List[Document], dense_indexes):
     for document in tqdm(documents, desc="Construyendo embeddings de los documentos", unit="doc"):
@@ -88,6 +99,10 @@ def generate_embeddings_from_doc_list(model, documents: List[Document], dense_in
 
             # Build document embedding
             document_embedding = np.mean(document_embeddings, axis=0)
+            # Normalizar el vector promedio
+            norm = np.linalg.norm(document_embedding)
+            if norm > 0:
+                document_embedding = document_embedding / norm
             add_to_dense_index(dense_indexes, document_embedding, "resoluciones", document.get_id())
             np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR']}/{document.get_id()}", document_embedding)
         
@@ -102,18 +117,22 @@ def generate_embeddings_from_doc_list(model, documents: List[Document], dense_in
 
             # Build document embedding
             document_embedding = np.mean(document_embeddings, axis=0)
+            # Normalizar el vector promedio
+            norm = np.linalg.norm(document_embedding)
+            if norm > 0:
+                document_embedding = document_embedding / norm
             add_to_dense_index(dense_indexes, document_embedding, "disposiciones", document.get_id())
             np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR']}/{document.get_id()}", document_embedding)
 
-        add_to_dense_index(dense_indexes, document_embedding, "completo", document.get_id())
-        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']}/{document.get_id()}", document_embedding)
+            add_to_dense_index(dense_indexes, document_embedding, "completo", document.get_id())
+            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']}/{document.get_id()}", document_embedding)
 
 def create_dense_indexes_structure():
     dense_indexes = {}
 
     for key in ["visto", "considerando", "resuelve", "dispone", "resoluciones", "disposiciones", "completo", "resolutiva"]:
         dense_indexes[key] = {}
-        dense_indexes[key]["index"] = faiss.IndexFlatL2(int(config["SENTENCE_TRANSFORMER_MODEL_DIMENSIONS"]))
+        dense_indexes[key]["index"] = faiss.IndexFlatIP(int(config["SENTENCE_TRANSFORMER_MODEL_DIMENSIONS"]))
         dense_indexes[key]["counter"] = 0
         dense_indexes[key]["metadata"] = {}
 
