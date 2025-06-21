@@ -3,6 +3,7 @@ import faiss
 import json
 import os
 import glob
+import numpy as np
 from utils.objects.document import Document
 from utils.objects.ranking import Ranking
 from utils.url_finder import get_url
@@ -46,8 +47,14 @@ def get_ranking_dense(index_name, query, k, relevant_documents_ids, docs_metadat
     # index_name: str con el nombre de la coleccion/indice ej. COMPLETE_RESUELVE
     # devuelve los docs
 
+    # Encode query and normalize the vector
     query_embedding = model.encode(query)
-    faiss_query_embedding = query_embedding.reshape(1, -1)
+    
+    # Normalize embedding to unit length (L2 norm)
+    query_embedding_norm = query_embedding / np.linalg.norm(query_embedding)
+    
+    # Reshape for FAISS
+    faiss_query_embedding = query_embedding_norm.reshape(1, -1)
 
     index, metadata = retrieve_index(index_name)
     D, I = index.search(faiss_query_embedding, int(config['RANKING_LIMIT']))

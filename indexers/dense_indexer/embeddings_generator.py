@@ -38,7 +38,7 @@ def add_to_dense_index(dense_indexes, embedding, document_type, doc_id):
     if abs(norm - 1.0) > 1e-5:  # Usando un pequeño epsilon para comparaciones de punto flotante
         logger.warning(f"Vector no normalizado para doc_id {doc_id} (norm={norm}). Normalizando antes de añadir al índice.")
         embedding = embedding / norm
-    
+
     dense_indexes[document_type]["index"].add(embedding.reshape(1, -1))
     counter = dense_indexes[document_type]["counter"]
     dense_indexes[document_type]["counter"] = dense_indexes[document_type]["counter"] + 1
@@ -53,11 +53,6 @@ def generate_embedding_of_sentences(model, sentences):
     # Calcular el promedio de los embeddings
     mean_embedding = np.mean(embeddings_of_sentences, axis=0)
     
-    # Normalizar el vector promedio para asegurar que tenga norma 1.0
-    norm = np.linalg.norm(mean_embedding)
-    if norm > 0:
-        mean_embedding = mean_embedding / norm
-        
     return mean_embedding
 
 def generate_embeddings_from_doc_list(model, documents: List[Document], dense_indexes):
@@ -99,10 +94,6 @@ def generate_embeddings_from_doc_list(model, documents: List[Document], dense_in
 
             # Build document embedding
             document_embedding = np.mean(document_embeddings, axis=0)
-            # Normalizar el vector promedio
-            norm = np.linalg.norm(document_embedding)
-            if norm > 0:
-                document_embedding = document_embedding / norm
             add_to_dense_index(dense_indexes, document_embedding, "resoluciones", document.get_id())
             np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_RESUELVE_DIR']}/{document.get_id()}", document_embedding)
         
@@ -117,15 +108,11 @@ def generate_embeddings_from_doc_list(model, documents: List[Document], dense_in
 
             # Build document embedding
             document_embedding = np.mean(document_embeddings, axis=0)
-            # Normalizar el vector promedio
-            norm = np.linalg.norm(document_embedding)
-            if norm > 0:
-                document_embedding = document_embedding / norm
             add_to_dense_index(dense_indexes, document_embedding, "disposiciones", document.get_id())
             np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_DISPONE_DIR']}/{document.get_id()}", document_embedding)
 
-            add_to_dense_index(dense_indexes, document_embedding, "completo", document.get_id())
-            np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']}/{document.get_id()}", document_embedding)
+        add_to_dense_index(dense_indexes, document_embedding, "completo", document.get_id())
+        np.savetxt(f"{config['EMBEDDINGS_GENERATOR_COMPLETE_COMPLETE_DIR']}/{document.get_id()}", document_embedding)
 
 def create_dense_indexes_structure():
     dense_indexes = {}
